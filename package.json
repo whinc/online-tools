@@ -12,7 +12,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "publish": "gh-pages -d build"
+    "publish": "gh-pages-clean && gh-pages -d build --repo=https://${GITHUB_TOKEN}@github.com/whinc/online-tools.git"
   },
   "eslintConfig": {
     "extends": "react-app"
