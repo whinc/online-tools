@@ -19,5 +19,7 @@ jobs:
         node-version: '10.x'
     - name: Install Dependencies
       run: npm install
-    - name: deploy app
-      run: npm run deploy
+    - name: Build App
+      run: npm run build
+    - name: Publish app
+      run: npm run publish
