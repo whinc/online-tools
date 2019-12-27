@@ -8,7 +8,7 @@ function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
-          Online tools
+          Online tools - test CI
         </p>
       </header>
     </div>
