@@ -1,6 +1,7 @@
 {
   "name": "online-tools",
   "version": "0.1.0",
+  "homepage": "https://whinc.github.io/online-tools",
   "dependencies": {
     "cra-template": "1.0.0",
     "react": "^16.12.0",
@@ -11,6 +12,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
