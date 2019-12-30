@@ -6,7 +6,7 @@ const NotFoundPage = () => {
   return (
     <PageLayout>
       <h1>404</h1>
-      <Link href='/'>返回首页</Link>
+      <Link href='#/'>返回首页</Link>
     </PageLayout>
   )
 }

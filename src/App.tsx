@@ -1,8 +1,8 @@
 import React, {Suspense} from "react";
 import {
-  BrowserRouter as Router,
+  HashRouter as Router,
   Route,
-  Switch,
+  Switch
 } from "react-router-dom";
 import {SnackbarProvider} from 'notistack'
 import LoadingPage from 'pages/LoadingPage'
