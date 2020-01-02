@@ -8,7 +8,8 @@ import {
   Typography,
   ExpansionPanel,
   ExpansionPanelSummary,
-  ExpansionPanelDetails
+  ExpansionPanelDetails,
+  Box
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import { ExpandMore } from "@material-ui/icons";
@@ -22,15 +23,57 @@ const useStyles = makeStyles({
     textAlign: "center"
   },
   error: {
-    width: '100%',
-    color: 'red',
-    overflow: 'auto'
+    width: "100%",
+    color: "red",
+    overflow: "auto"
   }
 });
 
-type RegExpPageProps = {};
+type RegExpTestPanelProps = {
+  regexp: {
+    source: string;
+    flags: string;
+  };
+};
+const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({ regexp }) => {
+  const [text, setText] = useState("");
+  const matched = useMemo(() => {
+    const jsRegExp = new RegExp(regexp.source, regexp.flags);
+    return jsRegExp.test(text);
+  }, [regexp, text]);
+  return (
+    <ExpansionPanel>
+      <ExpansionPanelSummary expandIcon={<ExpandMore />}>
+        <Typography>测试</Typography>
+      </ExpansionPanelSummary>
+      <ExpansionPanelDetails>
+        <Grid container direction="column">
+          <Grid item>
+            <TextField
+              variant="outlined"
+              label="输入测试文本"
+              multiline
+              fullWidth
+              value={text}
+              onChange={e => setText(e.target.value)}
+            />
+          </Grid>
+          <Grid item>
+            <Box mt={2}>
+              {matched ? (
+                <Box color="primary.main">匹配!</Box>
+              ) : (
+                <Box color="error.main">不匹配!</Box>
+              )}
+            </Box>
+          </Grid>
+        </Grid>
+      </ExpansionPanelDetails>
+    </ExpansionPanel>
+  );
+};
 
-const RegExpPage: React.FC = props => {
+const RegExpPage: React.FC = () => {
   const styles = useStyles();
   const [regexp, setRegexp] = useState({ source: ".*", flags: "" });
   const [inputText, setInputText] = useState("");
@@ -86,7 +129,7 @@ const RegExpPage: React.FC = props => {
           msg.push(regexp.source);
           msg.push("-".repeat(err.lastIndex) + "^");
         }
-        setError(new Error(msg.join('\n')))
+        setError(new Error(msg.join("\n")));
       } else {
         setError(err);
       }
@@ -94,7 +137,7 @@ const RegExpPage: React.FC = props => {
   }, [regexp, regulex, visualPanelExpanded]);
 
   return (
-    <PageLayout title='正则表达式'>
+    <PageLayout title="正则表达式">
       <Grid container direction="column" spacing={4}>
         <Grid item>
           <Grid container>
@@ -145,6 +188,7 @@ const RegExpPage: React.FC = props => {
         </Grid>
         <Grid item container></Grid>
       </Grid>
+      {/* 可视化 */}
       <ExpansionPanel
         expanded={visualPanelExpanded}
         onChange={(event, expanded) => setVisualPanelExpanded(expanded)}
@@ -152,9 +196,11 @@ const RegExpPage: React.FC = props => {
         <ExpansionPanelSummary expandIcon={<ExpandMore />}>
           <Typography>可视化</Typography>
         </ExpansionPanelSummary>
-        <ExpansionPanelDetails style={{flexDirection: 'column'}}>
+        <ExpansionPanelDetails style={{ flexDirection: "column" }}>
           {error && (
-            <Typography className={styles.error} component="pre"><code>{error.message}</code></Typography>
+            <Typography className={styles.error} component="pre">
+              <code>{error.message}</code>
+            </Typography>
           )}
           <div
             ref={containerRef}
@@ -163,6 +209,8 @@ const RegExpPage: React.FC = props => {
           />
         </ExpansionPanelDetails>
       </ExpansionPanel>
+
+      <RegExpTestPanel regexp={regexp} />
     </PageLayout>
   );
 };

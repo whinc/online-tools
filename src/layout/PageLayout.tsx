@@ -38,7 +38,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({ children, title }) => {
     <>
       <AppBar>
         <Toolbar>
-          <Typography className={styles.title}>{title || ""}</Typography>
+          <Typography className={styles.title}>{title || "在线工具"}</Typography>
           <IconButton
             component="a"
             href="https://github.com/whinc/online-tools"
