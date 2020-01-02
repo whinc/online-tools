@@ -26,7 +26,7 @@ const RegExpPage = (props: RegExpPageProps) => {
   }, [source.pattern, source.flags, inputText, enqueueSnackbar])
 
   return (
-    <PageLayout>
+    <PageLayout title='正则表达式'>
       <Grid container direction="column" spacing={4}>
         <Grid item>
           <Grid container>
