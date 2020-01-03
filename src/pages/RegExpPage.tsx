@@ -1,4 +1,10 @@
-import React, { useCallback, useState, useRef, useMemo } from "react";
+import React, {
+  useCallback,
+  useState,
+  useRef,
+  useMemo,
+  useEffect
+} from "react";
 import PageLayout from "layout/PageLayout";
 import {
   Grid,
@@ -11,16 +17,19 @@ import {
   ExpansionPanelDetails,
   Box
 } from "@material-ui/core";
+import { grey } from "@material-ui/core/colors";
 import { makeStyles } from "@material-ui/core/styles";
 import { ExpandMore } from "@material-ui/icons";
 import { useSnackbar } from "notistack";
 import { useRegulex } from "hooks";
+import { debugErr } from "utils";
 
 const useStyles = makeStyles({
   regexpContainer: {
     width: "100%",
     overflow: "auto",
-    textAlign: "center"
+    textAlign: "center",
+    padding: '20px 0'
   },
   error: {
     width: "100%",
@@ -29,18 +38,78 @@ const useStyles = makeStyles({
   }
 });
 
-type RegExpTestPanelProps = {
-  regexp: {
-    source: string;
-    flags: string;
-  };
+type RawRegExp = {
+  source: string;
+  flags: string;
 };
-const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({ regexp }) => {
+
+const RegExpVisualPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const styles = useStyles();
+  const [expanded, setExpanded] = useState(true);
+  const { value: regulex } = useRegulex();
+  const [error, setError] = useState<Error>();
+  useEffect(() => {
+    if (!expanded || !regulex || !containerRef.current) return;
+
+    // 清除生成的图片
+    containerRef.current.innerHTML = "";
+
+    const { parse, visualize, Raphael } = regulex;
+    var paper = Raphael(containerRef.current, 0, 0);
+    try {
+      // 重新生成图片
+      visualize(parse(regexp.source), regexp.flags, paper);
+      // 重置错误
+      setError(undefined);
+    } catch (err) {
+      let _err = err;
+      // 如果是语法错误，格式化错误
+      if (err instanceof parse.RegexSyntaxError) {
+        var msg = ["Error:" + err.message, ""];
+        if (typeof err.lastIndex === "number") {
+          msg.push(regexp.source);
+          msg.push("-".repeat(err.lastIndex) + "^");
+        }
+        _err = new Error(msg.join("\n"));
+      }
+      setError(_err);
+      debugErr(_err);
+    }
+  }, [regexp, regulex, expanded]);
+  return (
+    <ExpansionPanel
+      expanded={expanded}
+      onChange={(event, expanded) => setExpanded(expanded)}
+    >
+      <ExpansionPanelSummary expandIcon={<ExpandMore />}>
+        <Typography>可视化</Typography>
+      </ExpansionPanelSummary>
+      <ExpansionPanelDetails style={{ flexDirection: "column" }}>
+        {error && (
+          <Typography className={styles.error} component="pre">
+            <code>{error.message}</code>
+          </Typography>
+        )}
+        <div
+          ref={containerRef}
+          className={styles.regexpContainer}
+          style={{ height: error ? 0 : "auto" }}
+        />
+      </ExpansionPanelDetails>
+    </ExpansionPanel>
+  );
+};
+
+const RegExpTestPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
   const [text, setText] = useState("");
+  const isEmpty = !text || !regexp.source;
   const matched = useMemo(() => {
+    if (!isEmpty) return false;
+
     const jsRegExp = new RegExp(regexp.source, regexp.flags);
     return jsRegExp.test(text);
-  }, [regexp, text]);
+  }, [regexp, text, isEmpty]);
   return (
     <ExpansionPanel>
       <ExpansionPanelSummary expandIcon={<ExpandMore />}>
@@ -59,8 +128,10 @@ const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({ regexp }) => {
             />
           </Grid>
           <Grid item>
-            <Box mt={2}>
-              {matched ? (
+            <Box mt={2} ml={1}>
+              {isEmpty ? (
+                <Box color="primary.main">--</Box>
+              ) : matched ? (
                 <Box color="primary.main">匹配!</Box>
               ) : (
                 <Box color="error.main">不匹配!</Box>
@@ -73,68 +144,55 @@ const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({ regexp }) => {
   );
 };
 
-const RegExpPage: React.FC = () => {
-  const styles = useStyles();
-  const [regexp, setRegexp] = useState({ source: ".*", flags: "" });
-  const [inputText, setInputText] = useState("");
-  const [result, setResult] = useState("");
-  const { enqueueSnackbar } = useSnackbar();
 
-  /** visual regexp */
-  const containerRef = useRef<any>();
-  const [visualPanelExpanded, setVisualPanelExpanded] = useState(false);
-  const { value: regulex } = useRegulex();
+const RegExpMatchPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
+  const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState<Error>();
+  const styles = useStyles();
+  return (
+    <ExpansionPanel
+      expanded={expanded}
+      onChange={(event, expanded) => setExpanded(expanded)}
+    >
+      <ExpansionPanelSummary expandIcon={<ExpandMore />}>
+          <Typography>匹配</Typography>
+      </ExpansionPanelSummary>
+      <ExpansionPanelDetails style={{ flexDirection: "column" }}>
+        {error && (
+          <Typography className={styles.error} component="pre">
+            <code>{error.message}</code>
+          </Typography>
+        )}
+      </ExpansionPanelDetails>
+    </ExpansionPanel>
+  );
+};
 
-  const onClickTest = useCallback(() => {
-    if (!regexp.source) {
-      enqueueSnackbar("请输入正则表达式", {
-        variant: "warning",
-        anchorOrigin: { vertical: "top", horizontal: "center" },
-        autoHideDuration: 1500
-      });
-      return;
-    }
-    const jsRegexp = new RegExp(regexp.source, regexp.flags);
-    const matches = jsRegexp.test(inputText);
-    setResult(String(matches));
-  }, [regexp, inputText, enqueueSnackbar]);
+const RegExpReplacePanel: React.FC<{ regexp: RawRegExp }> = () => {
+  const [expanded, setExpanded] = useState(false);
+  const [error, setError] = useState<Error>();
+  const styles = useStyles();
+  return (
+    <ExpansionPanel
+      expanded={expanded}
+      onChange={(event, expanded) => setExpanded(expanded)}
+    >
+      <ExpansionPanelSummary expandIcon={<ExpandMore />}>
+        <Typography>替换</Typography>
+      </ExpansionPanelSummary>
+      <ExpansionPanelDetails style={{ flexDirection: "column" }}>
+        {error && (
+          <Typography className={styles.error} component="pre">
+            <code>{error.message}</code>
+          </Typography>
+        )}
+      </ExpansionPanelDetails>
+    </ExpansionPanel>
+  );
+};
 
-  // update graph
-  useMemo(() => {
-    if (!visualPanelExpanded) return;
-
-    if (!regulex) {
-      return;
-    }
-
-    if (!containerRef.current) {
-      return;
-    }
-
-    // clear previous generated graph
-    containerRef.current.innerHTML = "";
-
-    // try generate graph
-    const { parse, visualize, Raphael } = regulex;
-    var paper = Raphael(containerRef.current, 0, 0);
-    try {
-      visualize(parse(regexp.source), regexp.flags, paper);
-      setError(undefined);
-    } catch (err) {
-      console.error(err);
-      if (err instanceof parse.RegexSyntaxError) {
-        var msg = ["Error:" + err.message, ""];
-        if (typeof err.lastIndex === "number") {
-          msg.push(regexp.source);
-          msg.push("-".repeat(err.lastIndex) + "^");
-        }
-        setError(new Error(msg.join("\n")));
-      } else {
-        setError(err);
-      }
-    }
-  }, [regexp, regulex, visualPanelExpanded]);
+const RegExpPage: React.FC = () => {
+  const [regexp, setRegexp] = useState({ source: "\w+", flags: "" });
 
   return (
     <PageLayout title="正则表达式">
@@ -145,7 +203,7 @@ const RegExpPage: React.FC = () => {
               <Input
                 style={{ height: "100%" }}
                 startAdornment={<div style={{ padding: "0 10px" }}>/</div>}
-                placeholder="正则表达式"
+                placeholder="source"
                 fullWidth
                 value={regexp.source}
                 onChange={e => setRegexp({ ...regexp, source: e.target.value })}
@@ -154,7 +212,7 @@ const RegExpPage: React.FC = () => {
             <Grid item xs sm>
               <Input
                 startAdornment={<div style={{ padding: "0 10px" }}>/</div>}
-                placeholder="标志位"
+                placeholder="flags"
                 fullWidth
                 style={{ height: "100%" }}
                 value={regexp.flags}
@@ -163,54 +221,12 @@ const RegExpPage: React.FC = () => {
             </Grid>
           </Grid>
         </Grid>
-        <Grid item>
-          <Button
-            color="primary"
-            variant="contained"
-            onClick={onClickTest}
-            fullWidth
-          >
-            测试
-          </Button>
-        </Grid>
-        <Grid item>
-          <TextField
-            variant="outlined"
-            label="输入测试文本"
-            multiline
-            fullWidth
-            value={inputText}
-            onChange={e => setInputText(e.target.value)}
-          />
-        </Grid>
-        <Grid item>
-          <Typography>{result}</Typography>
-        </Grid>
-        <Grid item container></Grid>
       </Grid>
-      {/* 可视化 */}
-      <ExpansionPanel
-        expanded={visualPanelExpanded}
-        onChange={(event, expanded) => setVisualPanelExpanded(expanded)}
-      >
-        <ExpansionPanelSummary expandIcon={<ExpandMore />}>
-          <Typography>可视化</Typography>
-        </ExpansionPanelSummary>
-        <ExpansionPanelDetails style={{ flexDirection: "column" }}>
-          {error && (
-            <Typography className={styles.error} component="pre">
-              <code>{error.message}</code>
-            </Typography>
-          )}
-          <div
-            ref={containerRef}
-            className={styles.regexpContainer}
-            style={{ height: error ? 0 : "auto" }}
-          />
-        </ExpansionPanelDetails>
-      </ExpansionPanel>
-
+      <Box height={16} />
+      <RegExpVisualPanel regexp={regexp} />
       <RegExpTestPanel regexp={regexp} />
+      <RegExpMatchPanel regexp={regexp} />
+      <RegExpReplacePanel regexp={regexp} />
     </PageLayout>
   );
 };
