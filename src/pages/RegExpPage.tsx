@@ -148,7 +148,7 @@ const RegExpTestPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
           <Grid item>
             <TextField
               variant="outlined"
-              label="输入测试文本"
+              label="输入源文本"
               multiline
               fullWidth
               value={text}
@@ -175,7 +175,6 @@ const RegExpTestPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
 const RegExpMatchPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
   const [expanded, setExpanded] = useState(false);
   const [text, setText] = useState("");
-  const styles = useStyles();
   const isEmpty = !text || !regexp.source;
   const matches = useMemo(() => {
     if (isEmpty) return null;
@@ -201,7 +200,7 @@ const RegExpMatchPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
         <Box>
           <TextField
             variant="outlined"
-            label="输入测试文本"
+            label="输入源文本"
             multiline
             fullWidth
             value={text}
@@ -243,11 +242,9 @@ const RegExpMatchPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
 };
 
 const RegExpReplacePanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
-  const [expanded, setExpanded] = useState(true);
-  const [text, setText] = useState("xabcy");
+  const [expanded, setExpanded] = useState(false);
+  const [text, setText] = useState("");
   const [subText, setSubText] = useState("");
-  const styles = useStyles();
-  const isEmpty = !text || !regexp.source;
   const [newSubText, matches] = useMemo(() => {
     // if (isEmpty) return null;
 
