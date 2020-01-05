@@ -48,6 +48,19 @@ type RawRegExp = {
   flags: string;
 };
 
+const NameValue: React.FC<{ name: string; value: React.ReactNode }> = ({
+  name,
+  value
+}) => {
+  const styles = useStyles();
+  return (
+    <Box display="flex" className={styles.code} mt={1}>
+      <Box whiteSpace="nowrap">{name}:&nbsp;</Box>
+      <Box style={{ wordBreak: "break-all" }}>{value}</Box>
+    </Box>
+  );
+};
+
 const RegExpVisualPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const styles = useStyles();
@@ -109,6 +122,7 @@ const RegExpVisualPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
 const RegExpTestPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
   const [text, setText] = useState("");
   const isEmpty = !text || !regexp.source;
+  const [expanded, setExpanded] = useState(true);
   const matched = useMemo(() => {
     if (isEmpty) return false;
 
@@ -122,9 +136,12 @@ const RegExpTestPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
     }
   }, [regexp, text, isEmpty]);
   return (
-    <ExpansionPanel>
+    <ExpansionPanel
+      expanded={expanded}
+      onChange={(event, expanded) => setExpanded(expanded)}
+    >
       <ExpansionPanelSummary expandIcon={<ExpandMore />}>
-        <Typography>测试</Typography>
+        <Box>测试</Box>
       </ExpansionPanelSummary>
       <ExpansionPanelDetails>
         <Grid container direction="column">
@@ -157,7 +174,7 @@ const RegExpTestPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
 
 const RegExpMatchPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
   const [expanded, setExpanded] = useState(false);
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
   const styles = useStyles();
   const isEmpty = !text || !regexp.source;
   const matches = useMemo(() => {
@@ -199,32 +216,10 @@ const RegExpMatchPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
               <Box color={green[500]}>匹配!</Box>
               <Box style={{ overflow: "auto" }}>
                 {matches.map((group, n) => (
-                  <Box display="flex" mt={1}>
-                    <Box whiteSpace="nowrap">{`Group #${n}:`}&nbsp;</Box>
-                    {n === 0 ? (
-                      <Box style={{ wordBreak: "break-all" }}>
-                        <Box component="span" color={grey[300]}>
-                          {matches.input.substr(0, matches.index)}
-                        </Box>
-                        <Box component="span">
-                          {matches.input.substr(
-                            matches.index,
-                            matches[0].length
-                          )}
-                        </Box>
-                        <Box component="span" color={grey[300]}>
-                          {matches.input.substr(
-                            matches.index + matches[0].length
-                          )}
-                        </Box>
-                      </Box>
-                    ) : (
-                      <Box style={{ wordBreak: "break-all" }}>{group}</Box>
-                    )}
-                  </Box>
+                  <NameValue name={`分组 #${n}`} value={group} />
                 ))}
               </Box>
-              <Box mt={2}>JavaScript 代码：</Box>
+              {/* <Box mt={2}>JavaScript 代码：</Box>
               <Box style={{ overflow: "auto" }}>
                 <Box component="pre" className={styles.code}>
                   {`/${regexp.source}/${regexp.flags}.exec("${
@@ -238,7 +233,7 @@ const RegExpMatchPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
                 <Box component="pre" className={styles.code}>
                   {JSON.stringify(matches, null, 2)}
                 </Box>
-              </Box>
+              </Box> */}
             </Box>
           )}
         </Box>
@@ -247,10 +242,27 @@ const RegExpMatchPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
   );
 };
 
-const RegExpReplacePanel: React.FC<{ regexp: RawRegExp }> = () => {
-  const [expanded, setExpanded] = useState(false);
-  const [error] = useState<Error>();
+const RegExpReplacePanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
+  const [expanded, setExpanded] = useState(true);
+  const [text, setText] = useState("xabcy");
+  const [subText, setSubText] = useState("");
   const styles = useStyles();
+  const isEmpty = !text || !regexp.source;
+  const [newSubText, matches] = useMemo(() => {
+    // if (isEmpty) return null;
+
+    let jsRegExp;
+    try {
+      jsRegExp = new RegExp(regexp.source, regexp.flags);
+    } catch (err) {
+      debugErr(err);
+      return ["", null];
+    }
+    const newSubText = text.replace(jsRegExp, subText);
+    const matches = jsRegExp.exec(text);
+    console.log("matches:", matches);
+    return [newSubText, matches];
+  }, [regexp.flags, regexp.source, subText, text]);
   return (
     <ExpansionPanel
       expanded={expanded}
@@ -260,11 +272,46 @@ const RegExpReplacePanel: React.FC<{ regexp: RawRegExp }> = () => {
         <Typography>替换</Typography>
       </ExpansionPanelSummary>
       <ExpansionPanelDetails style={{ flexDirection: "column" }}>
-        {error && (
-          <Typography className={styles.error} component="pre">
-            <code>{error.message}</code>
-          </Typography>
+        <Box>
+          <TextField
+            variant="outlined"
+            label="输入源文本"
+            multiline
+            fullWidth
+            value={text}
+            onChange={e => setText(e.target.value)}
+          />
+        </Box>
+        {matches !== null && (
+          <Box mt={2}>
+            <NameValue name="$$" value="$" />
+            <NameValue name="$&" value={matches[0]} />
+            <NameValue
+              name="$`"
+              value={matches.input.substring(0, matches.index)}
+            />
+            <NameValue
+              name="$'"
+              value={matches.input.substring(matches.index + matches[0].length)}
+            />
+            {matches.map((group, n) =>
+              n >= 1 ? <NameValue name={"$" + n} value={group} /> : null
+            )}
+          </Box>
         )}
+        <Box mt={2}>
+          <TextField
+            variant="outlined"
+            label="输入替换文本"
+            multiline
+            fullWidth
+            value={subText}
+            onChange={e => setSubText(e.target.value)}
+          />
+        </Box>
+        <Box mt={2}>
+          <Box>{newSubText}</Box>
+        </Box>
       </ExpansionPanelDetails>
     </ExpansionPanel>
   );
@@ -272,7 +319,7 @@ const RegExpReplacePanel: React.FC<{ regexp: RawRegExp }> = () => {
 
 const RegExpPage: React.FC = () => {
   const styles = useStyles();
-  const [regexp, setRegexp] = useState({ source: "\\w+", flags: "" });
+  const [regexp, setRegexp] = useState({ source: "a(\\w+)c", flags: "" });
 
   const separator = (
     <Box pt="6px" pb="7px" color="primary.main">
