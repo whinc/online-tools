@@ -10,7 +10,8 @@
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "react-router-dom": "^5.1.2",
-    "react-use": "^13.13.0"
+    "react-use": "^13.13.0",
+    "typeface-roboto": "0.0.75"
   },
   "scripts": {
     "start": "react-app-rewired start",
@@ -35,17 +36,18 @@
     ]
   },
   "devDependencies": {
-    "@types/react-dom": "^16.9.4",
     "@types/jest": "^24.0.25",
     "@types/node": "^13.1.1",
     "@types/react": "^16.9.17",
+    "@types/react-dom": "^16.9.4",
     "@types/react-router-dom": "^5.1.3",
-    "cra-template": "1.0.0",
-    "react-scripts": "3.3.0",
     "babel-plugin-transform-imports": "^2.0.0",
+    "cra-template": "1.0.0",
     "customize-cra": "^0.9.1",
+    "eslint": "^6.8.0",
     "gh-pages": "^2.1.1",
     "react-app-rewired": "^2.1.5",
+    "react-scripts": "3.3.0",
     "source-map-explorer": "^2.1.2",
     "typescript": "^3.7.4"
   }
