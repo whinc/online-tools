@@ -15,7 +15,7 @@ import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { green, red, grey } from "@material-ui/core/colors";
 import { useRegulex } from "hooks";
 import { debugErr } from "utils";
-import { Clear } from "@material-ui/icons";
+import SwipeableViews from "react-swipeable-views";
 
 declare module "@material-ui/core/styles/createMuiTheme" {
   interface Theme {
@@ -282,7 +282,7 @@ const RegExpReplacePanel: React.FC<PanelProps> = ({
 
 const RegExpPage: React.FC = () => {
   const styles = useStyles();
-  const [tab, setTab] = useState(0);
+  const [tabIndex, setTabIndex] = useState(0);
   const [text, setText] = useState("");
   const [regexp, setRegexp] = useState({ source: "a(\\w+)c", flags: "" });
   const theme = useTheme();
@@ -331,8 +331,8 @@ const RegExpPage: React.FC = () => {
       <Paper elevation={2}>
         <Box my={2}>
           <Tabs
-            value={tab}
-            onChange={(_, value) => setTab(value as number)}
+            value={tabIndex}
+            onChange={(_, value) => setTabIndex(value as number)}
             textColor="primary"
             indicatorColor="primary"
             variant={matches ? "fullWidth" : "standard"}
@@ -341,19 +341,29 @@ const RegExpPage: React.FC = () => {
             <Tab label="匹配"></Tab>
             <Tab label="替换"></Tab>
           </Tabs>
-          <TabPanel id={0} value={tab}>
-            <RegExpTestPanel regexp={regexp} value={text} onChange={setText} />
-          </TabPanel>
-          <TabPanel id={1} value={tab}>
-            <RegExpMatchPanel regexp={regexp} value={text} onChange={setText} />
-          </TabPanel>
-          <TabPanel id={2} value={tab}>
-            <RegExpReplacePanel
-              regexp={regexp}
-              value={text}
-              onChange={setText}
-            />
-          </TabPanel>
+          <SwipeableViews index={tabIndex} onChangeIndex={setTabIndex}>
+            <TabPanel id={0} value={tabIndex}>
+              <RegExpTestPanel
+                regexp={regexp}
+                value={text}
+                onChange={setText}
+              />
+            </TabPanel>
+            <TabPanel id={1} value={tabIndex}>
+              <RegExpMatchPanel
+                regexp={regexp}
+                value={text}
+                onChange={setText}
+              />
+            </TabPanel>
+            <TabPanel id={2} value={tabIndex}>
+              <RegExpReplacePanel
+                regexp={regexp}
+                value={text}
+                onChange={setText}
+              />
+            </TabPanel>
+          </SwipeableViews>
         </Box>
       </Paper>
     </PageLayout>
