@@ -5,16 +5,17 @@ import {
   TextField,
   Input,
   Typography,
-  ExpansionPanel,
-  ExpansionPanelSummary,
-  ExpansionPanelDetails,
-  Box
+  Box,
+  Tabs,
+  Tab,
+  Paper,
+  useMediaQuery
 } from "@material-ui/core";
-import { makeStyles } from "@material-ui/core/styles";
-import { ExpandMore } from "@material-ui/icons";
+import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { green, red, grey } from "@material-ui/core/colors";
 import { useRegulex } from "hooks";
 import { debugErr } from "utils";
+import { Clear } from "@material-ui/icons";
 
 declare module "@material-ui/core/styles/createMuiTheme" {
   interface Theme {
@@ -48,6 +49,12 @@ type RawRegExp = {
   flags: string;
 };
 
+type PanelProps = {
+  regexp: RawRegExp;
+  value: string;
+  onChange: (newValue: string) => void;
+};
+
 const NameValue: React.FC<{ name: string; value: React.ReactNode }> = ({
   name,
   value
@@ -61,14 +68,22 @@ const NameValue: React.FC<{ name: string; value: React.ReactNode }> = ({
   );
 };
 
+const TabPanel: React.FC<{ id: number; value: number }> = ({
+  children,
+  id,
+  value,
+  ...props
+}) => {
+  return <Box {...props}>{id === value && <Box p={3}>{children}</Box>}</Box>;
+};
+
 const RegExpVisualPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const styles = useStyles();
-  const [expanded, setExpanded] = useState(true);
   const { value: regulex } = useRegulex();
   const [error, setError] = useState<Error>();
   useEffect(() => {
-    if (!expanded || !regulex || !containerRef.current) return;
+    if (!regulex || !containerRef.current) return;
 
     // 清除生成的图片
     containerRef.current.innerHTML = "";
@@ -94,156 +109,115 @@ const RegExpVisualPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
       setError(_err);
       debugErr(_err);
     }
-  }, [regexp, regulex, expanded]);
+  }, [regexp, regulex]);
   return (
-    <ExpansionPanel
-      expanded={expanded}
-      onChange={(event, expanded) => setExpanded(expanded)}
-    >
-      <ExpansionPanelSummary expandIcon={<ExpandMore />}>
-        <Typography>可视化</Typography>
-      </ExpansionPanelSummary>
-      <ExpansionPanelDetails style={{ flexDirection: "column" }}>
-        {error && (
-          <Typography className={styles.error} component="pre">
-            <code>{error.message}</code>
-          </Typography>
-        )}
-        <div
-          ref={containerRef}
-          className={styles.regexpContainer}
-          style={{ height: error ? 0 : "auto" }}
-        />
-      </ExpansionPanelDetails>
-    </ExpansionPanel>
+    <Box>
+      {error && (
+        <Typography className={styles.error} component="pre">
+          <code>{error.message}</code>
+        </Typography>
+      )}
+      <div
+        ref={containerRef}
+        className={styles.regexpContainer}
+        style={{ height: error ? 0 : "auto" }}
+      />
+    </Box>
   );
 };
 
-const RegExpTestPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
-  const [text, setText] = useState("");
-  const isEmpty = !text || !regexp.source;
-  const [expanded, setExpanded] = useState(true);
+const RegExpTestPanel: React.FC<PanelProps> = ({ regexp, value, onChange }) => {
+  const isEmpty = !value || !regexp.source;
   const matched = useMemo(() => {
     if (isEmpty) return false;
 
     let jsRegExp;
     try {
       jsRegExp = new RegExp(regexp.source, regexp.flags);
-      return jsRegExp.test(text);
+      return jsRegExp.test(value);
     } catch (err) {
       debugErr(err);
       return false;
     }
-  }, [regexp, text, isEmpty]);
+  }, [regexp, value, isEmpty]);
   return (
-    <ExpansionPanel
-      expanded={expanded}
-      onChange={(event, expanded) => setExpanded(expanded)}
-    >
-      <ExpansionPanelSummary expandIcon={<ExpandMore />}>
-        <Box>测试</Box>
-      </ExpansionPanelSummary>
-      <ExpansionPanelDetails>
-        <Grid container direction="column">
-          <Grid item>
-            <TextField
-              variant="outlined"
-              label="输入源文本"
-              multiline
-              fullWidth
-              value={text}
-              onChange={e => setText(e.target.value)}
-            />
-          </Grid>
-          <Grid item>
-            <Box mt={2} ml={1}>
-              {isEmpty ? (
-                <Box color={grey[500]}>--</Box>
-              ) : matched ? (
-                <Box color={green[500]}>匹配!</Box>
-              ) : (
-                <Box color={red[500]}>不匹配!</Box>
-              )}
-            </Box>
-          </Grid>
-        </Grid>
-      </ExpansionPanelDetails>
-    </ExpansionPanel>
+    <>
+      <Box>
+        <TextField
+          variant="outlined"
+          label="输入源文本"
+          multiline
+          fullWidth
+          value={value}
+          onChange={e => onChange(e.target.value)}
+        />
+      </Box>
+      <Box mt={2} ml={1}>
+        {isEmpty ? (
+          <Box color={grey[500]}>--</Box>
+        ) : matched ? (
+          <Box color={green[500]}>匹配!</Box>
+        ) : (
+          <Box color={red[500]}>不匹配!</Box>
+        )}
+      </Box>
+    </>
   );
 };
 
-const RegExpMatchPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
-  const [expanded, setExpanded] = useState(false);
-  const [text, setText] = useState("");
-  const isEmpty = !text || !regexp.source;
+const RegExpMatchPanel: React.FC<PanelProps> = ({
+  regexp,
+  value,
+  onChange
+}) => {
+  const isEmpty = !value || !regexp.source;
   const matches = useMemo(() => {
     if (isEmpty) return null;
 
     let jsRegExp;
     try {
       jsRegExp = new RegExp(regexp.source, regexp.flags);
-      return jsRegExp.exec(text);
+      return jsRegExp.exec(value);
     } catch (err) {
       debugErr(err);
       return null;
     }
-  }, [isEmpty, regexp, text]);
+  }, [isEmpty, regexp, value]);
   return (
-    <ExpansionPanel
-      expanded={expanded}
-      onChange={(event, expanded) => setExpanded(expanded)}
-    >
-      <ExpansionPanelSummary expandIcon={<ExpandMore />}>
-        <Typography>匹配</Typography>
-      </ExpansionPanelSummary>
-      <ExpansionPanelDetails style={{ flexDirection: "column" }}>
-        <Box>
-          <TextField
-            variant="outlined"
-            label="输入源文本"
-            multiline
-            fullWidth
-            value={text}
-            onChange={e => setText(e.target.value)}
-          />
-        </Box>
-        <Box mt={2}>
-          {isEmpty && <Box color={grey[500]}>--</Box>}
-          {!isEmpty && matches === null && <Box color={red[500]}>不匹配!</Box>}
-          {!isEmpty && matches !== null && (
-            <Box>
-              <Box color={green[500]}>匹配!</Box>
-              <Box style={{ overflow: "auto" }}>
-                {matches.map((group, n) => (
-                  <NameValue name={`分组 #${n}`} value={group} />
-                ))}
-              </Box>
-              {/* <Box mt={2}>JavaScript 代码：</Box>
-              <Box style={{ overflow: "auto" }}>
-                <Box component="pre" className={styles.code}>
-                  {`/${regexp.source}/${regexp.flags}.exec("${
-                    matches.input.length <= 6
-                      ? matches.input
-                      : matches.input.substr(0, 3) +
-                        "..." +
-                        matches.input.substr(matches.input.length - 3)
-                  }")`}
-                </Box>
-                <Box component="pre" className={styles.code}>
-                  {JSON.stringify(matches, null, 2)}
-                </Box>
-              </Box> */}
+    <>
+      <Box>
+        <TextField
+          variant="outlined"
+          label="输入源文本"
+          multiline
+          fullWidth
+          value={value}
+          onChange={e => onChange(e.target.value)}
+        />
+      </Box>
+      <Box mt={2}>
+        {isEmpty && <Box color={grey[500]}>--</Box>}
+        {!isEmpty && matches === null && <Box color={red[500]}>不匹配!</Box>}
+        {!isEmpty && matches !== null && (
+          <Box>
+            <Box color={green[500]}>匹配!</Box>
+            <Box style={{ overflow: "auto" }}>
+              {matches.map((group, n) => (
+                <NameValue name={`分组 #${n}`} value={group} />
+              ))}
             </Box>
-          )}
-        </Box>
-      </ExpansionPanelDetails>
-    </ExpansionPanel>
+          </Box>
+        )}
+      </Box>
+    </>
   );
 };
 
-const RegExpReplacePanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
-  const [expanded, setExpanded] = useState(false);
-  const [text, setText] = useState("");
+const RegExpReplacePanel: React.FC<PanelProps> = ({
+  regexp,
+  value,
+  onChange
+}) => {
   const [subText, setSubText] = useState("");
   const [newSubText, matches] = useMemo(() => {
     // if (isEmpty) return null;
@@ -255,68 +229,64 @@ const RegExpReplacePanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
       debugErr(err);
       return ["", null];
     }
-    const newSubText = text.replace(jsRegExp, subText);
-    const matches = jsRegExp.exec(text);
+    const newSubText = value.replace(jsRegExp, subText);
+    const matches = jsRegExp.exec(value);
     console.log("matches:", matches);
     return [newSubText, matches];
-  }, [regexp.flags, regexp.source, subText, text]);
+  }, [regexp.flags, regexp.source, subText, value]);
   return (
-    <ExpansionPanel
-      expanded={expanded}
-      onChange={(event, expanded) => setExpanded(expanded)}
-    >
-      <ExpansionPanelSummary expandIcon={<ExpandMore />}>
-        <Typography>替换</Typography>
-      </ExpansionPanelSummary>
-      <ExpansionPanelDetails style={{ flexDirection: "column" }}>
-        <Box>
-          <TextField
-            variant="outlined"
-            label="输入源文本"
-            multiline
-            fullWidth
-            value={text}
-            onChange={e => setText(e.target.value)}
-          />
-        </Box>
-        {matches !== null && (
-          <Box mt={2}>
-            <NameValue name="$$" value="$" />
-            <NameValue name="$&" value={matches[0]} />
-            <NameValue
-              name="$`"
-              value={matches.input.substring(0, matches.index)}
-            />
-            <NameValue
-              name="$'"
-              value={matches.input.substring(matches.index + matches[0].length)}
-            />
-            {matches.map((group, n) =>
-              n >= 1 ? <NameValue name={"$" + n} value={group} /> : null
-            )}
-          </Box>
-        )}
+    <>
+      <Box>
+        <TextField
+          variant="outlined"
+          label="输入源文本"
+          multiline
+          fullWidth
+          value={value}
+          onChange={e => onChange(e.target.value)}
+        />
+      </Box>
+      {matches !== null && (
         <Box mt={2}>
-          <TextField
-            variant="outlined"
-            label="输入替换文本"
-            multiline
-            fullWidth
-            value={subText}
-            onChange={e => setSubText(e.target.value)}
+          <NameValue name="$$" value="$" />
+          <NameValue name="$&" value={matches[0]} />
+          <NameValue
+            name="$`"
+            value={matches.input.substring(0, matches.index)}
           />
+          <NameValue
+            name="$'"
+            value={matches.input.substring(matches.index + matches[0].length)}
+          />
+          {matches.map((group, n) =>
+            n >= 1 ? <NameValue name={"$" + n} value={group} /> : null
+          )}
         </Box>
-        <Box mt={2}>
-          <Box>{newSubText}</Box>
-        </Box>
-      </ExpansionPanelDetails>
-    </ExpansionPanel>
+      )}
+      <Box mt={2}>
+        <TextField
+          variant="outlined"
+          label="输入替换文本"
+          multiline
+          fullWidth
+          value={subText}
+          onChange={e => setSubText(e.target.value)}
+        />
+      </Box>
+      <Box mt={2}>
+        <Box>{newSubText}</Box>
+      </Box>
+    </>
   );
 };
 
 const RegExpPage: React.FC = () => {
   const styles = useStyles();
+  const [tab, setTab] = useState(0);
+  const [text, setText] = useState("");
   const [regexp, setRegexp] = useState({ source: "a(\\w+)c", flags: "" });
+  const theme = useTheme();
+  const matches = useMediaQuery(theme.breakpoints.down("sm"));
 
   const separator = (
     <Box pt="6px" pb="7px" color="primary.main">
@@ -352,10 +322,40 @@ const RegExpPage: React.FC = () => {
         </Grid>
       </Grid>
       <Box height={16} />
-      <RegExpVisualPanel regexp={regexp} />
-      <RegExpTestPanel regexp={regexp} />
-      <RegExpMatchPanel regexp={regexp} />
-      <RegExpReplacePanel regexp={regexp} />
+      <Paper elevation={2}>
+        <Box my={2} px={2} py={0}>
+          <RegExpVisualPanel regexp={regexp} />
+        </Box>
+      </Paper>
+
+      <Paper elevation={2}>
+        <Box my={2}>
+          <Tabs
+            value={tab}
+            onChange={(_, value) => setTab(value as number)}
+            textColor="primary"
+            indicatorColor="primary"
+            variant={matches ? "fullWidth" : "standard"}
+          >
+            <Tab label="测试"></Tab>
+            <Tab label="匹配"></Tab>
+            <Tab label="替换"></Tab>
+          </Tabs>
+          <TabPanel id={0} value={tab}>
+            <RegExpTestPanel regexp={regexp} value={text} onChange={setText} />
+          </TabPanel>
+          <TabPanel id={1} value={tab}>
+            <RegExpMatchPanel regexp={regexp} value={text} onChange={setText} />
+          </TabPanel>
+          <TabPanel id={2} value={tab}>
+            <RegExpReplacePanel
+              regexp={regexp}
+              value={text}
+              onChange={setText}
+            />
+          </TabPanel>
+        </Box>
+      </Paper>
     </PageLayout>
   );
 };
