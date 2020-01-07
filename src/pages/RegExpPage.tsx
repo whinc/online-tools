@@ -1,4 +1,10 @@
-import React, { useState, useRef, useMemo, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useMemo,
+  useEffect,
+  useCallback
+} from "react";
 import PageLayout from "layout/PageLayout";
 import {
   Grid,
@@ -9,7 +15,9 @@ import {
   Tabs,
   Tab,
   Paper,
-  useMediaQuery
+  useMediaQuery,
+  Checkbox,
+  FormControlLabel
 } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { green, red, grey } from "@material-ui/core/colors";
@@ -280,6 +288,21 @@ const RegExpReplacePanel: React.FC<PanelProps> = ({
   );
 };
 
+const flagItems = [
+  {
+    flag: "g",
+    label: "全局匹配"
+  },
+  {
+    flag: "i",
+    label: "忽略大小写"
+  },
+  {
+    flag: "m",
+    label: "多行匹配"
+  }
+] as const;
+
 const RegExpPage: React.FC = () => {
   const styles = useStyles();
   const [tabIndex, setTabIndex] = useState(0);
@@ -287,6 +310,27 @@ const RegExpPage: React.FC = () => {
   const [regexp, setRegexp] = useState({ source: "a(\\w+)c", flags: "" });
   const theme = useTheme();
   const matches = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // 单个标志位变化
+  const onFlagChange = (flag: "g" | "i" | "m", checked: boolean) => {
+    let newFlags = regexp.flags.replace(new RegExp(flag, "g"), "");
+    newFlags += checked ? flag : "";
+    setRegexp({ ...regexp, flags: newFlags });
+  };
+
+  // 一组标志位变化
+  const onFlagsChange:  React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    let newFlags = e.target.value;
+    // 去除无效标志位
+    newFlags = newFlags.replace(/[^gim]/, "");
+    // 去重
+    "gim".split("").forEach(flag => {
+      if (newFlags.includes(flag)) {
+        newFlags = newFlags.replace(new RegExp(flag, "g"), "") + flag;
+      }
+    });
+    setRegexp({ ...regexp, flags: newFlags });
+  };
 
   const separator = (
     <Box pt="6px" pb="7px" color="primary.main">
@@ -296,32 +340,45 @@ const RegExpPage: React.FC = () => {
   return (
     <PageLayout title="正则表达式">
       <Grid container direction="column" spacing={4}>
-        <Grid item>
-          <Grid container>
-            <Grid item xs={9} sm={10}>
-              <Input
-                className={styles.code}
-                startAdornment={separator}
-                placeholder="source"
-                fullWidth
-                value={regexp.source}
-                onChange={e => setRegexp({ ...regexp, source: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs sm>
-              <Input
-                className={styles.code}
-                startAdornment={separator}
-                placeholder="flags"
-                fullWidth
-                value={regexp.flags}
-                onChange={e => setRegexp({ ...regexp, flags: e.target.value })}
-              />
-            </Grid>
+        <Grid item container>
+          <Grid item xs={9} sm={10}>
+            <Input
+              className={styles.code}
+              startAdornment={separator}
+              placeholder="pattern"
+              fullWidth
+              value={regexp.source}
+              onChange={e => setRegexp({ ...regexp, source: e.target.value })}
+            />
+          </Grid>
+          <Grid item xs sm>
+            <Input
+              className={styles.code}
+              startAdornment={separator}
+              placeholder="flags"
+              fullWidth
+              value={regexp.flags}
+              onChange={onFlagsChange}
+            />
           </Grid>
         </Grid>
+        <Grid item container>
+          {flagItems.map(item => (
+            <Grid item>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={regexp.flags.includes(item.flag)}
+                    onChange={(_, checked) => onFlagChange(item.flag, checked)}
+                    color="primary"
+                  />
+                }
+                label={item.label}
+              />
+            </Grid>
+          ))}
+        </Grid>
       </Grid>
-      <Box height={16} />
       <Paper elevation={2}>
         <Box my={2} px={2} py={0}>
           <RegExpVisualPanel regexp={regexp} />
