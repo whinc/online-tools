@@ -17,13 +17,15 @@ import {
   Paper,
   useMediaQuery,
   Checkbox,
-  FormControlLabel
+  FormControlLabel,
+  Button
 } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { green, red, grey } from "@material-ui/core/colors";
-import { useRegulex } from "hooks";
+import { useRegulex, useQuery } from "hooks";
 import { debugErr } from "utils";
 import SwipeableViews from "react-swipeable-views";
+import { useLocation, useHistory } from "react-router-dom";
 
 declare module "@material-ui/core/styles/createMuiTheme" {
   interface Theme {
@@ -303,11 +305,25 @@ const flagItems = [
   }
 ] as const;
 
+const useRegExp = () => {
+  const [query, setQuery] = useQuery();
+  const source = query.source || "";
+  const flags = query.flags || "";
+  const regexp: RawRegExp = { source, flags };
+  const setRegExp = useCallback(
+    (regexp: RawRegExp) => {
+      setQuery(regexp);
+    },
+    [setQuery]
+  );
+  return [regexp, setRegExp] as const;
+};
+
 const RegExpPage: React.FC = () => {
   const styles = useStyles();
   const [tabIndex, setTabIndex] = useState(0);
   const [text, setText] = useState("");
-  const [regexp, setRegexp] = useState({ source: "a(\\w+)c", flags: "" });
+  const [regexp, setRegexp] = useRegExp();
   const theme = useTheme();
   const matches = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -319,7 +335,7 @@ const RegExpPage: React.FC = () => {
   };
 
   // 一组标志位变化
-  const onFlagsChange:  React.ChangeEventHandler<HTMLInputElement> = (e) => {
+  const onFlagsChange: React.ChangeEventHandler<HTMLInputElement> = e => {
     let newFlags = e.target.value;
     // 去除无效标志位
     newFlags = newFlags.replace(/[^gim]/, "");
