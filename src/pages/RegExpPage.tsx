@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import PageLayout from "layout/PageLayout";
 import {
+  Select,
   Grid,
   TextField,
   Input,
@@ -14,18 +15,19 @@ import {
   Box,
   Tabs,
   Tab,
-  Paper,
   useMediaQuery,
   Checkbox,
   FormControlLabel,
-  Button,
   CardHeader,
   CardContent,
   CardActions,
-  IconButton,
   Card,
+  Chip,
+  IconButton,
   Tooltip,
-  Chip
+  Collapse,
+  Button,
+  MenuItem
 } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { green, red, grey } from "@material-ui/core/colors";
@@ -33,9 +35,11 @@ import { useRegulex, useQuery } from "hooks";
 import { debugErr } from "utils";
 import SwipeableViews from "react-swipeable-views";
 import { useLocation as useWindowLocation } from "react-use";
-import { Share, Clear } from "@material-ui/icons";
 import { useSnackbar } from "notistack";
+import { FileCopy, ExpandMore } from "@material-ui/icons";
 import CopyToClipboard from "react-copy-to-clipboard";
+import clsx from "clsx";
+import {VisualRegExp, RegExpType, CodeBlock} from 'components'
 
 declare module "@material-ui/core/styles/createMuiTheme" {
   interface Theme {
@@ -43,17 +47,18 @@ declare module "@material-ui/core/styles/createMuiTheme" {
   }
 }
 
+
+enum Language {
+  JavaScript = "JavaScript"
+}
+
+enum TabIndex {
+  TEST,
+  MATCH,
+  REPLACE
+}
+
 const useStyles = makeStyles(theme => ({
-  regexpContainer: {
-    width: "100%",
-    overflow: "auto",
-    textAlign: "center"
-  },
-  error: {
-    width: "100%",
-    color: "red",
-    overflow: "auto"
-  },
   input: {
     height: "100%",
     fontFamily: theme.codeFontFamily
@@ -62,20 +67,24 @@ const useStyles = makeStyles(theme => ({
     fontFamily: theme.codeFontFamily
   },
   tags: {
-    '& > *': {
+    "& > *": {
       marginRight: theme.spacing(1),
-      marginBottom: theme.spacing(1),
+      marginBottom: theme.spacing(1)
     }
+  },
+  expand: {
+    transform: "rotate(0deg)",
+    transition: theme.transitions.create("transform", {
+      duration: theme.transitions.duration.shortest
+    })
+  },
+  expandOpen: {
+    transform: "rotate(180deg)"
   }
 }));
 
-type RawRegExp = {
-  source: string;
-  flags: string;
-};
-
 type PanelProps = {
-  regexp: RawRegExp;
+  regexp: RegExpType;
   value: string;
   onChange: (newValue: string) => void;
 };
@@ -99,56 +108,7 @@ const TabPanel: React.FC<{ id: number; value: number }> = ({
   value,
   ...props
 }) => {
-  return <Box {...props}>{id === value && <Box p={3}>{children}</Box>}</Box>;
-};
-
-const RegExpVisualPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const styles = useStyles();
-  const { value: regulex } = useRegulex();
-  const [error, setError] = useState<Error>();
-  useEffect(() => {
-    if (!regulex || !containerRef.current) return;
-
-    // 清除生成的图片
-    containerRef.current.innerHTML = "";
-
-    const { parse, visualize, Raphael } = regulex;
-    var paper = Raphael(containerRef.current, 0, 0);
-    try {
-      // 重新生成图片
-      visualize(parse(regexp.source), regexp.flags, paper);
-      // 重置错误
-      setError(undefined);
-    } catch (err) {
-      let _err = err;
-      // 如果是语法错误，格式化错误
-      if (err instanceof parse.RegexSyntaxError) {
-        var msg = ["Error:" + err.message, ""];
-        if (typeof err.lastIndex === "number") {
-          msg.push(regexp.source);
-          msg.push("-".repeat(err.lastIndex) + "^");
-        }
-        _err = new Error(msg.join("\n"));
-      }
-      setError(_err);
-      debugErr(_err);
-    }
-  }, [regexp, regulex]);
-  return (
-    <Box>
-      {error && (
-        <Typography className={styles.error} component="pre">
-          <code>{error.message}</code>
-        </Typography>
-      )}
-      <div
-        ref={containerRef}
-        className={styles.regexpContainer}
-        style={{ height: error ? 0 : "auto" }}
-      />
-    </Box>
-  );
+  return <Box {...props}>{id === value && <Box pt={3}>{children}</Box>}</Box>;
 };
 
 const RegExpTestPanel: React.FC<PanelProps> = ({ regexp, value, onChange }) => {
@@ -238,15 +198,18 @@ const RegExpMatchPanel: React.FC<PanelProps> = ({
   );
 };
 
-const RegExpReplacePanel: React.FC<PanelProps> = ({
+type RegExpReplacePanelProps = PanelProps & {
+  newValue: string;
+  onNewValueChange: (newValue: string) => void;
+};
+const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({
   regexp,
   value,
-  onChange
+  onChange,
+  newValue,
+  onNewValueChange
 }) => {
-  const [subText, setSubText] = useState("");
   const [newSubText, matches] = useMemo(() => {
-    // if (isEmpty) return null;
-
     let jsRegExp;
     try {
       jsRegExp = new RegExp(regexp.source, regexp.flags);
@@ -254,11 +217,11 @@ const RegExpReplacePanel: React.FC<PanelProps> = ({
       debugErr(err);
       return ["", null];
     }
-    const newSubText = value.replace(jsRegExp, subText);
+    const newSubText = value.replace(jsRegExp, newValue);
     const matches = jsRegExp.exec(value);
     console.log("matches:", matches);
     return [newSubText, matches];
-  }, [regexp.flags, regexp.source, subText, value]);
+  }, [regexp.flags, regexp.source, newValue, value]);
   return (
     <>
       <Box>
@@ -294,8 +257,8 @@ const RegExpReplacePanel: React.FC<PanelProps> = ({
           label="输入替换文本"
           multiline
           fullWidth
-          value={subText}
-          onChange={e => setSubText(e.target.value)}
+          value={newValue}
+          onChange={e => onNewValueChange(e.target.value)}
         />
       </Box>
       <Box mt={2}>
@@ -324,9 +287,9 @@ const useRegExp = () => {
   const [query, setQuery] = useQuery();
   const source = query.source || "";
   const flags = query.flags || "";
-  const regexp: RawRegExp = { source, flags };
+  const regexp: RegExpType = { source, flags };
   const setRegExp = useCallback(
-    (regexp: RawRegExp) => {
+    (regexp: RegExpType) => {
       setQuery(regexp);
     },
     [setQuery]
@@ -334,16 +297,17 @@ const useRegExp = () => {
   return [regexp, setRegExp] as const;
 };
 
-
 const RegExpPage: React.FC = () => {
   const styles = useStyles();
-  const [tabIndex, setTabIndex] = useState(0);
-  const [text, setText] = useState("");
+  const [tabIndex, setTabIndex] = useState(TabIndex.TEST);
   const [regexp, setRegexp] = useRegExp();
+  const [text, setText] = useState("");
+  const [newText, setNewText] = useState("");
   const theme = useTheme();
   const matches = useMediaQuery(theme.breakpoints.down("sm"));
+  const [expanded, setExpanded] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
-  const { href } = useWindowLocation();
+  const [language, setLanguage] = useState(Language.JavaScript);
 
   // 单个标志位变化
   const onFlagChange = (flag: "g" | "i" | "m", checked: boolean) => {
@@ -371,8 +335,25 @@ const RegExpPage: React.FC = () => {
       /
     </Box>
   );
+
+  const code = useMemo(() => {
+    let code = "";
+    if (!expanded) return code;
+    if (tabIndex === TabIndex.TEST) {
+      code = `const str = "${text}";
+/${regexp.source}/${regexp.flags}.test(str)`;
+    } else if (tabIndex === TabIndex.MATCH) {
+      code = `const str = "${text}";
+/${regexp.source}/${regexp.flags}.exec(str)`;
+    } else if (tabIndex === TabIndex.REPLACE) {
+      code = `const str = "${text}";
+str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`;
+    }
+    return code;
+  }, [expanded, newText, regexp, tabIndex, text]);
   return (
     <PageLayout title="正则表达式">
+      {/* 输入正则 */}
       <Card>
         <CardHeader title="正则表达式"></CardHeader>
         <CardContent>
@@ -402,7 +383,7 @@ const RegExpPage: React.FC = () => {
         <CardActions>
           <Grid container>
             {flagItems.map(item => (
-              <Grid item>
+              <Grid item key={item.flag}>
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -420,11 +401,12 @@ const RegExpPage: React.FC = () => {
           </Grid>
         </CardActions>
       </Card>
+      {/* 可视化 */}
       <Box mt={2}>
         <Card>
           <CardHeader title="可视化"></CardHeader>
           <CardContent>
-            <RegExpVisualPanel regexp={regexp} />
+            <VisualRegExp regexp={regexp} />
           </CardContent>
           {/* <CardActions>
             <Tooltip title="分享" arrow placement="top">
@@ -455,6 +437,7 @@ const RegExpPage: React.FC = () => {
         </Card>
       </Box>
 
+      {/* 测试/匹配/替换 */}
       <Box my={2}>
         <Card>
           <CardContent>
@@ -470,44 +453,90 @@ const RegExpPage: React.FC = () => {
               <Tab label="替换"></Tab>
             </Tabs>
             <SwipeableViews index={tabIndex} onChangeIndex={setTabIndex}>
-              <TabPanel id={0} value={tabIndex}>
+              <TabPanel id={TabIndex.TEST} value={tabIndex}>
                 <RegExpTestPanel
                   regexp={regexp}
                   value={text}
                   onChange={setText}
                 />
               </TabPanel>
-              <TabPanel id={1} value={tabIndex}>
+              <TabPanel id={TabIndex.MATCH} value={tabIndex}>
                 <RegExpMatchPanel
                   regexp={regexp}
                   value={text}
                   onChange={setText}
                 />
               </TabPanel>
-              <TabPanel id={2} value={tabIndex}>
+              <TabPanel id={TabIndex.REPLACE} value={tabIndex}>
                 <RegExpReplacePanel
                   regexp={regexp}
                   value={text}
                   onChange={setText}
+                  newValue={newText}
+                  onNewValueChange={setNewText}
                 />
               </TabPanel>
             </SwipeableViews>
           </CardContent>
           <CardActions>
-            <IconButton onClick={() => setText('')}><Typography>清除</Typography></IconButton>
+            {expanded && (
+              <Box ml={1}>
+                <Select
+                  value={language}
+                  onChange={e => setLanguage(e.target.value as Language)}
+                >
+                  <MenuItem value={Language.JavaScript}>JavaScript</MenuItem>
+                </Select>
+              </Box>
+            )}
+            <Button
+              style={{ marginLeft: "auto" }}
+              endIcon={
+                <ExpandMore
+                  className={clsx(styles.expand, {
+                    [styles.expandOpen]: expanded
+                  })}
+                />
+              }
+              onClick={() => setExpanded(!expanded)}
+            >
+              生成代码
+            </Button>
           </CardActions>
+          {/* 生成代码 */}
+          <Collapse in={expanded}>
+            <CardContent>
+              <CodeBlock code={code} language='javascript' />
+            </CardContent>
+            <CardActions>
+              <CopyToClipboard
+                text={code}
+                onCopy={() =>
+                  enqueueSnackbar("已复制!", { autoHideDuration: 1500 })
+                }
+              >
+                <Tooltip title="复制" placement="top">
+                  <IconButton>
+                    <FileCopy />
+                  </IconButton>
+                </Tooltip>
+              </CopyToClipboard>
+            </CardActions>
+          </Collapse>
         </Card>
       </Box>
+      {/* 常用正则 */}
       <Box mt={2}>
         <Card>
           <CardHeader title="常用正则表达式"></CardHeader>
           <CardContent>
-            <Box display="flex" flexWrap='wrap' className={styles.tags}>
+            <Box display="flex" flexWrap="wrap" className={styles.tags}>
               {mostRegExps.map(({ label, source }) => (
                 <Chip
+                  key={label}
                   variant="outlined"
                   label={label}
-                  onClick={() => setRegexp({ source, flags: '' })}
+                  onClick={() => setRegexp({ source, flags: "" })}
                 />
               ))}
             </Box>
@@ -521,35 +550,36 @@ const RegExpPage: React.FC = () => {
 const mostRegExps = [
   {
     label: "身份证号",
-    source: /^\d{17}[0-9Xx]|\d{15}$/.source,
+    source: /^\d{17}[0-9Xx]|\d{15}$/.source
   },
   {
-    label: 'Email地址',
+    label: "Email地址",
     source: /^\w[-\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\.)+[A-Za-z]{2,14}$/.source
   },
   {
-    label: '中文字符',
+    label: "中文字符",
     source: /^[\u4e00-\u9fa5]+$/.source
   },
   {
-    label: '双字节字符(含汉字)',
+    label: "双字节字符(含汉字)",
     // eslint-disable-next-line no-control-regex
     source: /^[^\x00-\xff]+$/.source
   },
   {
-    label: '时间(时:分:秒)',
+    label: "时间(时:分:秒)",
     source: /^([01]?\d|2[0-3]):[0-5]?\d:[0-5]?\d$/.source
   },
   {
-    label: '日期(年:月:日)',
-    source: /^(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)-(0[1-9]|[12][0-9]|30))|(02-(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))-02-29)$/.source
+    label: "日期(年:月:日)",
+    source: /^(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)-(0[1-9]|[12][0-9]|30))|(02-(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))-02-29)$/
+      .source
   },
   {
-    label: 'IPv4地址',
+    label: "IPv4地址",
     source: /^\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}$/.source
   },
   {
-    label: '手机号',
+    label: "手机号",
     source: /^(13\d|14[579]|15[^4\D]|17[^49\D]|18\d)\d{8}$/.source
   }
 ];
