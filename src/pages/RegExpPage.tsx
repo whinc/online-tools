@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import PageLayout from "layout/PageLayout";
 import {
+  Select,
   Grid,
   TextField,
   Input,
@@ -24,7 +25,9 @@ import {
   Chip,
   IconButton,
   Tooltip,
-  Collapse
+  Collapse,
+  Button,
+  MenuItem
 } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { green, red, grey } from "@material-ui/core/colors";
@@ -36,11 +39,17 @@ import { useSnackbar } from "notistack";
 import { FileCopy, ExpandMore } from "@material-ui/icons";
 import CopyToClipboard from "react-copy-to-clipboard";
 import clsx from "clsx";
+import {VisualRegExp, RegExpType, CodeBlock} from 'components'
 
 declare module "@material-ui/core/styles/createMuiTheme" {
   interface Theme {
     codeFontFamily: string;
   }
+}
+
+
+enum Language {
+  JavaScript = "JavaScript"
 }
 
 enum TabIndex {
@@ -50,16 +59,6 @@ enum TabIndex {
 }
 
 const useStyles = makeStyles(theme => ({
-  regexpContainer: {
-    width: "100%",
-    overflow: "auto",
-    textAlign: "center"
-  },
-  error: {
-    width: "100%",
-    color: "red",
-    overflow: "auto"
-  },
   input: {
     height: "100%",
     fontFamily: theme.codeFontFamily
@@ -75,7 +74,6 @@ const useStyles = makeStyles(theme => ({
   },
   expand: {
     transform: "rotate(0deg)",
-    marginLeft: "auto",
     transition: theme.transitions.create("transform", {
       duration: theme.transitions.duration.shortest
     })
@@ -85,13 +83,8 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-type RawRegExp = {
-  source: string;
-  flags: string;
-};
-
 type PanelProps = {
-  regexp: RawRegExp;
+  regexp: RegExpType;
   value: string;
   onChange: (newValue: string) => void;
 };
@@ -115,56 +108,7 @@ const TabPanel: React.FC<{ id: number; value: number }> = ({
   value,
   ...props
 }) => {
-  return <Box {...props}>{id === value && <Box py={3}>{children}</Box>}</Box>;
-};
-
-const RegExpVisualPanel: React.FC<{ regexp: RawRegExp }> = ({ regexp }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const styles = useStyles();
-  const { value: regulex } = useRegulex();
-  const [error, setError] = useState<Error>();
-  useEffect(() => {
-    if (!regulex || !containerRef.current) return;
-
-    // 清除生成的图片
-    containerRef.current.innerHTML = "";
-
-    const { parse, visualize, Raphael } = regulex;
-    var paper = Raphael(containerRef.current, 0, 0);
-    try {
-      // 重新生成图片
-      visualize(parse(regexp.source), regexp.flags, paper);
-      // 重置错误
-      setError(undefined);
-    } catch (err) {
-      let _err = err;
-      // 如果是语法错误，格式化错误
-      if (err instanceof parse.RegexSyntaxError) {
-        var msg = ["Error:" + err.message, ""];
-        if (typeof err.lastIndex === "number") {
-          msg.push(regexp.source);
-          msg.push("-".repeat(err.lastIndex) + "^");
-        }
-        _err = new Error(msg.join("\n"));
-      }
-      setError(_err);
-      debugErr(_err);
-    }
-  }, [regexp, regulex]);
-  return (
-    <Box>
-      {error && (
-        <Typography className={styles.error} component="pre">
-          <code>{error.message}</code>
-        </Typography>
-      )}
-      <div
-        ref={containerRef}
-        className={styles.regexpContainer}
-        style={{ height: error ? 0 : "auto" }}
-      />
-    </Box>
-  );
+  return <Box {...props}>{id === value && <Box pt={3}>{children}</Box>}</Box>;
 };
 
 const RegExpTestPanel: React.FC<PanelProps> = ({ regexp, value, onChange }) => {
@@ -343,9 +287,9 @@ const useRegExp = () => {
   const [query, setQuery] = useQuery();
   const source = query.source || "";
   const flags = query.flags || "";
-  const regexp: RawRegExp = { source, flags };
+  const regexp: RegExpType = { source, flags };
   const setRegExp = useCallback(
-    (regexp: RawRegExp) => {
+    (regexp: RegExpType) => {
       setQuery(regexp);
     },
     [setQuery]
@@ -363,6 +307,7 @@ const RegExpPage: React.FC = () => {
   const matches = useMediaQuery(theme.breakpoints.down("sm"));
   const [expanded, setExpanded] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
+  const [language, setLanguage] = useState(Language.JavaScript);
 
   // 单个标志位变化
   const onFlagChange = (flag: "g" | "i" | "m", checked: boolean) => {
@@ -393,7 +338,7 @@ const RegExpPage: React.FC = () => {
 
   const code = useMemo(() => {
     let code = "";
-    if (!expanded) return code
+    if (!expanded) return code;
     if (tabIndex === TabIndex.TEST) {
       code = `const str = "${text}";
 /${regexp.source}/${regexp.flags}.test(str)`;
@@ -461,7 +406,7 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`;
         <Card>
           <CardHeader title="可视化"></CardHeader>
           <CardContent>
-            <RegExpVisualPanel regexp={regexp} />
+            <VisualRegExp regexp={regexp} />
           </CardContent>
           {/* <CardActions>
             <Tooltip title="分享" arrow placement="top">
@@ -534,35 +479,49 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`;
             </SwipeableViews>
           </CardContent>
           <CardActions>
-            <IconButton
-              className={clsx(styles.expand, {
-                [styles.expandOpen]: expanded
-              })}
+            {expanded && (
+              <Box ml={1}>
+                <Select
+                  value={language}
+                  onChange={e => setLanguage(e.target.value as Language)}
+                >
+                  <MenuItem value={Language.JavaScript}>JavaScript</MenuItem>
+                </Select>
+              </Box>
+            )}
+            <Button
+              style={{ marginLeft: "auto" }}
+              endIcon={
+                <ExpandMore
+                  className={clsx(styles.expand, {
+                    [styles.expandOpen]: expanded
+                  })}
+                />
+              }
               onClick={() => setExpanded(!expanded)}
             >
-              <ExpandMore />
-            </IconButton>
+              生成代码
+            </Button>
           </CardActions>
+          {/* 生成代码 */}
           <Collapse in={expanded}>
             <CardContent>
-              <Box component="pre">
-                <Box component="code" lineHeight={1.5}>
-                  {code}
-                </Box>
-              </Box>
+              <CodeBlock code={code} language='javascript' />
             </CardContent>
-          <CardActions>
-            <CopyToClipboard
-              text={code}
-              onCopy={() => enqueueSnackbar("已复制!", {autoHideDuration: 1500})}
-            >
-              <Tooltip title="复制" placement="top">
-                <IconButton>
-                  <FileCopy />
-                </IconButton>
-              </Tooltip>
-            </CopyToClipboard>
-          </CardActions>
+            <CardActions>
+              <CopyToClipboard
+                text={code}
+                onCopy={() =>
+                  enqueueSnackbar("已复制!", { autoHideDuration: 1500 })
+                }
+              >
+                <Tooltip title="复制" placement="top">
+                  <IconButton>
+                    <FileCopy />
+                  </IconButton>
+                </Tooltip>
+              </CopyToClipboard>
+            </CardActions>
           </Collapse>
         </Card>
       </Box>
