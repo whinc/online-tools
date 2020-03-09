@@ -55,6 +55,6 @@
     "react-app-rewired": "2.1.5",
     "react-scripts": "3.3.0",
     "source-map-explorer": "2.1.2",
-    "typescript": "3.7.4"
+    "typescript": "3.8.3"
   }
 }
