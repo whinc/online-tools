@@ -54,7 +54,7 @@
     "gh-pages": "2.1.1",
     "react-app-rewired": "2.1.5",
     "react-scripts": "3.3.0",
-    "source-map-explorer": "2.1.2",
+    "source-map-explorer": "2.3.1",
     "typescript": "3.7.4"
   }
 }
