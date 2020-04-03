@@ -393,6 +393,9 @@ const RegExpPage: React.FC = () => {
               />
             </Grid>
           ))}
+          <Box flexGrow={1} display='flex' justifyContent='flex-end' alignItems='center' mr={1} >
+            <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions">元字符参考</a>
+          </Box>
         </Grid>
       </Grid>
       <Paper elevation={2}>
