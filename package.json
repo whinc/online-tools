@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "homepage": ".",
   "dependencies": {
-    "@material-ui/core": "4.9.5",
+    "@material-ui/core": "4.9.8",
     "@material-ui/icons": "4.9.1",
-    "@material-ui/system": "4.9.3",
+    "@material-ui/system": "4.9.6",
     "clsx": "1.0.4",
     "notistack": "0.9.7",
     "prism-react-renderer": "1.0.2",
