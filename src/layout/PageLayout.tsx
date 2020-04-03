@@ -45,7 +45,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({ children, title }) => {
         </Toolbar>
       </AppBar>
       <Toolbar />
-      <Container className={styles.root} maxWidth="md">
+      <Container className={styles.root}>
         {children}
       </Container>
     </>

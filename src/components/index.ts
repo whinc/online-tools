@@ -1,1 +1,2 @@
-export {default as VisualRegExp} from './VisualRegExp'
+export * from './VisualRegExp'
+export * from './CodeBlock'
