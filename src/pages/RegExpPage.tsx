@@ -36,17 +36,17 @@ import { debugErr } from "utils";
 import SwipeableViews from "react-swipeable-views";
 import { useLocation as useWindowLocation } from "react-use";
 import { useSnackbar } from "notistack";
-import { FileCopy, ExpandMore } from "@material-ui/icons";
+import { FileCopy, ExpandMore, FileCopyOutlined } from "@material-ui/icons";
 import CopyToClipboard from "react-copy-to-clipboard";
 import clsx from "clsx";
-import {VisualRegExp, RegExpType, CodeBlock} from 'components'
+import { VisualRegExp, RegExpType, CodeBlock } from "components";
+import { copyToClipboard } from "utils";
 
 declare module "@material-ui/core/styles/createMuiTheme" {
   interface Theme {
     codeFontFamily: string;
   }
 }
-
 
 enum Language {
   JavaScript = "JavaScript"
@@ -398,6 +398,23 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`;
                 />
               </Grid>
             ))}
+            <Box
+              flexGrow={1}
+              display="flex"
+              justifyContent="flex-end"
+              alignItems="center"
+              mr={1}
+            >
+              <IconButton
+                onClick={() => {
+                  if (copyToClipboard(`/${regexp.source}/${regexp.flags}`)) {
+                    enqueueSnackbar(<span>已复制!</span>);
+                  }
+                }}
+              >
+                <FileCopyOutlined />
+              </IconButton>
+            </Box>
           </Grid>
         </CardActions>
       </Card>
@@ -506,7 +523,7 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`;
           {/* 生成代码 */}
           <Collapse in={expanded}>
             <CardContent>
-              <CodeBlock code={code} language='javascript' />
+              <CodeBlock code={code} language="javascript" />
             </CardContent>
             <CardActions>
               <CopyToClipboard
