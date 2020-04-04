@@ -1,8 +1,10 @@
 {
   "extends": [
     "config:base"
-  ],
+  ],{
   "automerge": true,
+  "automergeType": "pr",
+  "automergeComment": "automergeComment"
   "pinVersions": false,
   "ignoreUnstable": true,
   "major": {
