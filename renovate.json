@@ -2,16 +2,10 @@
   "extends": [
     "config:base"
   ],
-  "automerge": true,
-  "automergeType": "pr",
-  "automergeComment": "automergeComment",
-  "pinVersions": false,
-  "ignoreUnstable": true,
-  "major": {
-    "automerge": false
-  },
-  "devDependencies": {
-    "automerge": true,
-    "pinVersions": true
-  }
+  "packageRules": [
+    {
+      "updateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true
+    }
+  ]
 }
