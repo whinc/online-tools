@@ -14,7 +14,7 @@
     "react-dom": "16.13.1",
     "react-router-dom": "5.1.2",
     "react-swipeable-views": "0.13.3",
-    "react-use": "13.13.0",
+    "react-use": "14.1.0",
     "typeface-roboto": "0.0.75"
   },
   "scripts": {
