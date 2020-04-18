@@ -7,7 +7,7 @@
     "@material-ui/icons": "4.9.1",
     "@material-ui/system": "4.9.3",
     "clsx": "1.0.4",
-    "notistack": "0.9.7",
+    "notistack": "0.9.10",
     "prism-react-renderer": "1.0.2",
     "react": "16.13.1",
     "react-copy-to-clipboard": "5.0.2",
