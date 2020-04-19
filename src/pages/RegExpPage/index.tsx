@@ -1,8 +1,4 @@
-import React, {
-  useState,
-  useMemo,
-  useCallback,
-} from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import PageLayout from "layout/PageLayout";
 import {
   Select,
@@ -17,7 +13,6 @@ import {
   CardContent,
   CardActions,
   Card,
-  Chip,
   IconButton,
   Tooltip,
   Collapse,
@@ -29,11 +24,13 @@ import { green, red, grey } from "@material-ui/core/colors";
 import { useQuery } from "hooks";
 import { debugErr } from "utils";
 import { useSnackbar } from "notistack";
-import { FileCopy, ExpandMore, FileCopyOutlined } from "@material-ui/icons";
+import { FileCopy, ExpandMore, FileCopyOutlined, HelpOutline } from "@material-ui/icons";
 import CopyToClipboard from "react-copy-to-clipboard";
 import clsx from "clsx";
 import { VisualRegExp, RegExpType, CodeBlock } from "components";
 import { copyToClipboard } from "utils";
+import { RegExpChips } from "./RegExpChips";
+import {RegExpTestPanel} from './RegExpTestPanel'
 
 declare module "@material-ui/core/styles/createMuiTheme" {
   interface Theme {
@@ -49,7 +46,7 @@ enum TabIndex {
   TEST,
   MATCH,
   REPLACE,
-  COMMONLY_USED_REGEXP
+  COMMONLY_USED_REGEXP,
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -103,45 +100,6 @@ const TabPanel: React.FC<{ id: number; value: number }> = ({
   ...props
 }) => {
   return <Box {...props}>{id === value && <Box pt={3}>{children}</Box>}</Box>;
-};
-
-const RegExpTestPanel: React.FC<PanelProps> = ({ regexp, value, onChange }) => {
-  const isEmpty = !value || !regexp.source;
-  const matched = useMemo(() => {
-    if (isEmpty) return false;
-
-    let jsRegExp;
-    try {
-      jsRegExp = new RegExp(regexp.source, regexp.flags);
-      return jsRegExp.test(value);
-    } catch (err) {
-      debugErr(err);
-      return false;
-    }
-  }, [regexp, value, isEmpty]);
-  return (
-    <>
-      <Box>
-        <TextField
-          variant="outlined"
-          label="输入源文本"
-          multiline
-          fullWidth
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      </Box>
-      <Box mt={2} ml={1}>
-        {isEmpty ? (
-          <Box color={grey[500]}>--</Box>
-        ) : matched ? (
-          <Box color={green[500]}>匹配!</Box>
-        ) : (
-          <Box color={red[500]}>不匹配!</Box>
-        )}
-      </Box>
-    </>
-  );
 };
 
 const RegExpMatchPanel: React.FC<PanelProps> = ({
@@ -391,16 +349,26 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`;
             alignItems="center"
             mr={1}
           >
+            <Tooltip title={`帮助`}>
+              <IconButton
+                onClick={() => { }}
+                component="a"
+                href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions"
+                target="_blank"
+              >
+                <HelpOutline />
+              </IconButton>
+            </Tooltip>
             <Tooltip title={`复制`}>
-            <IconButton
-              onClick={() => {
-                if (copyToClipboard(`/${regexp.source}/${regexp.flags}`)) {
-                  enqueueSnackbar(<span>已复制!</span>);
-                }
-              }}
-            >
-              <FileCopyOutlined />
-            </IconButton>
+              <IconButton
+                onClick={() => {
+                  if (copyToClipboard(`/${regexp.source}/${regexp.flags}`)) {
+                    enqueueSnackbar(<span>已复制!</span>);
+                  }
+                }}
+              >
+                <FileCopyOutlined />
+              </IconButton>
             </Tooltip>
           </Box>
         </Box>
@@ -447,7 +415,7 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`;
             <Tab label="常用正则"></Tab>
           </Tabs>
           <TabPanel id={TabIndex.TEST} value={tabIndex}>
-            <RegExpTestPanel regexp={regexp} value={text} onChange={setText} />
+            <RegExpTestPanel source={regexp.source} flags={regexp.flags} />
           </TabPanel>
           <TabPanel id={TabIndex.MATCH} value={tabIndex}>
             <RegExpMatchPanel regexp={regexp} value={text} onChange={setText} />
@@ -462,16 +430,7 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`;
             />
           </TabPanel>
           <TabPanel id={TabIndex.COMMONLY_USED_REGEXP} value={tabIndex}>
-            <Box display="flex" flexWrap="wrap" className={styles.tags}>
-              {mostRegExps.map(({ label, source }) => (
-                <Chip
-                  key={label}
-                  variant="outlined"
-                  label={label}
-                  onClick={() => setRegexp({ source, flags: "" })}
-                />
-              ))}
-            </Box>
+            <RegExpChips onSelect={(regexp) => setRegexp(regexp)} />
           </TabPanel>
         </Box>
       </Box>
@@ -530,42 +489,5 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`;
     </PageLayout>
   );
 };
-
-const mostRegExps = [
-  {
-    label: "身份证号",
-    source: /^\d{17}[0-9Xx]|\d{15}$/.source,
-  },
-  {
-    label: "Email地址",
-    source: /^\w[-\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\.)+[A-Za-z]{2,14}$/.source,
-  },
-  {
-    label: "中文字符",
-    source: /^[\u4e00-\u9fa5]+$/.source,
-  },
-  {
-    label: "双字节字符(含汉字)",
-    // eslint-disable-next-line no-control-regex
-    source: /^[^\x00-\xff]+$/.source,
-  },
-  {
-    label: "时间(时:分:秒)",
-    source: /^([01]?\d|2[0-3]):[0-5]?\d:[0-5]?\d$/.source,
-  },
-  {
-    label: "日期(年:月:日)",
-    source: /^(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)-(0[1-9]|[12][0-9]|30))|(02-(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))-02-29)$/
-      .source,
-  },
-  {
-    label: "IPv4地址",
-    source: /^\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}$/.source,
-  },
-  {
-    label: "手机号",
-    source: /^(13\d|14[579]|15[^4\D]|17[^49\D]|18\d)\d{8}$/.source,
-  },
-];
 
 export default RegExpPage;
