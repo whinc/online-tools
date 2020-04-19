@@ -1,6 +1,6 @@
 
 import React from "react";
-import {Box, GridList, GridListTile, ListSubheader, GridListTileBar, IconButton} from '@material-ui/core'
+import {Box, GridList, GridListTile, GridListTileBar, IconButton} from '@material-ui/core'
 import {makeStyles} from '@material-ui/core/styles'
 import PageLayout from 'layout/PageLayout'
 import {useHistory} from 'react-router-dom'
