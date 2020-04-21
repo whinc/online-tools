@@ -13,8 +13,6 @@ import {
   CardContent,
   CardActions,
   Card,
-  IconButton,
-  Tooltip,
   Collapse,
   Button,
   MenuItem,
@@ -23,15 +21,11 @@ import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { green, red, grey } from "@material-ui/core/colors";
 import { useQuery } from "hooks";
 import { debugErr } from "utils";
-import { useSnackbar } from "notistack";
 import {
   ExpandMore,
-  FileCopyOutlined,
-  HelpOutline,
 } from "@material-ui/icons";
 import clsx from "clsx";
-import { VisualRegExp, RegExpType, CodeBlock, CopyAction } from "components";
-import { copyToClipboard } from "utils";
+import { VisualRegExp, RegExpType, CodeBlock, CopyAction, OutLink } from "components";
 import { RegExpChips } from "./RegExpChips";
 import { RegExpTestPanel } from "./RegExpTestPanel";
 
@@ -54,7 +48,7 @@ enum TabIndex {
 
 const useStyles = makeStyles((theme) => ({
   regexpInput: {
-    fontSize: "1.6rem",
+    fontSize: "1.6em",
     fontFamily: theme.codeFontFamily,
   },
   code: {
@@ -261,7 +255,6 @@ const RegExpPage: React.FC = () => {
   const theme = useTheme();
   const matches = useMediaQuery(theme.breakpoints.down("sm"));
   const [expanded, setExpanded] = useState(false);
-  const { enqueueSnackbar } = useSnackbar();
   const [language, setLanguage] = useState(Language.JavaScript);
 
   // 单个标志位变化
@@ -352,27 +345,8 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`;
             alignItems="center"
             mr={1}
           >
-            <Tooltip title={`帮助`}>
-              <IconButton
-                onClick={() => {}}
-                component="a"
-                href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions"
-                target="_blank"
-              >
-                <HelpOutline />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={`复制`}>
-              <IconButton
-                onClick={() => {
-                  if (copyToClipboard(`/${regexp.source}/${regexp.flags}`)) {
-                    enqueueSnackbar(<span>已复制!</span>);
-                  }
-                }}
-              >
-                <FileCopyOutlined />
-              </IconButton>
-            </Tooltip>
+          <OutLink title='Regular expressions - MDN' href={'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions'} />
+          <CopyAction text={`/${regexp.source}/${regexp.flags}`} />
           </Box>
         </Box>
 

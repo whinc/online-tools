@@ -14,7 +14,7 @@ export const theme = createMuiTheme({
     secondary: pink
   },
   typography: {
-    fontSize: 16
+    fontSize: 14
   },
   codeFontFamily: "source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace"
 });

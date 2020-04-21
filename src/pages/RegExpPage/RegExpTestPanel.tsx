@@ -1,10 +1,6 @@
 import React, { useMemo, useState } from "react";
-import {
-  Box,
-  TextField,
-  Typography,
-} from "@material-ui/core";
-import { CodeBlock, CopyAction } from "components";
+import { Box, TextField, Typography } from "@material-ui/core";
+import { CodeBlock, CopyAction, OutLink } from "components";
 
 export type RegExpTestPanelProps = {
   source: string;
@@ -20,11 +16,11 @@ export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({
     try {
       const regexp = new RegExp(source, flags);
       const result1 = regexp.test(text);
-      const result2 = text.search(regexp)
-      const escapedText = text.replace(/'/g, "\\'")
-      const code1 = `${regexp}.test('${escapedText}')`
-      const code2 = `'${escapedText}'.search(${regexp})`
-      return { result1, code1, code2, result2};
+      const result2 = text.search(regexp);
+      const escapedText = text.replace(/'/g, "\\'");
+      const code1 = `${regexp}.test('${escapedText}')`;
+      const code2 = `'${escapedText}'.search(${regexp})`;
+      return { result1, code1, code2, result2 };
     } catch (error) {
       return { error: error as Error };
     }
@@ -42,17 +38,41 @@ export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({
           onChange={(e) => setText(e.target.value)}
         />
       </Box>
-      <Box mt={1} display="flex" alignItems="center">
-        <Box flexGrow={1}>
-          <CodeBlock code={`${code1!}\n// ${result1!}`} language="javascript" />
+      <Box overflow="auto">
+        <Box mt={2} display="flex" alignItems="center" flexWrap="wrap">
+          <Box flexGrow={1}>
+            <CodeBlock
+              code={`${code1!}\n// ${result1!}`}
+              language="javascript"
+            />
+          </Box>
+          <Box display='flex'>
+            <OutLink
+              title="RegExp.prototype.test() - MDN"
+              href={
+                "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test"
+              }
+            />
+            <CopyAction text={code1!} />
+          </Box>
         </Box>
-        <CopyAction text={code1!} />
-      </Box>
-      <Box mt={1} display="flex" alignItems="center">
-        <Box flexGrow={1}>
-          <CodeBlock code={`${code2!}\n// ${result2!}`} language="javascript" />
+        <Box mt={2} display="flex" alignItems="center" flexWrap="wrap">
+          <Box flexGrow={1}>
+            <CodeBlock
+              code={`${code2!}\n// ${result2!}`}
+              language="javascript"
+            />
+          </Box>
+          <Box display='flex'>
+            <OutLink
+              title="String.prototype.search() - MDN"
+              href={
+                "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/search"
+              }
+            />
+            <CopyAction text={code2!} />
+          </Box>
         </Box>
-        <CopyAction text={code2!} />
       </Box>
     </Box>
   );
