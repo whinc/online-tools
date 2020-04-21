@@ -24,13 +24,16 @@ import { green, red, grey } from "@material-ui/core/colors";
 import { useQuery } from "hooks";
 import { debugErr } from "utils";
 import { useSnackbar } from "notistack";
-import { FileCopy, ExpandMore, FileCopyOutlined, HelpOutline } from "@material-ui/icons";
-import CopyToClipboard from "react-copy-to-clipboard";
+import {
+  ExpandMore,
+  FileCopyOutlined,
+  HelpOutline,
+} from "@material-ui/icons";
 import clsx from "clsx";
-import { VisualRegExp, RegExpType, CodeBlock } from "components";
+import { VisualRegExp, RegExpType, CodeBlock, CopyAction } from "components";
 import { copyToClipboard } from "utils";
 import { RegExpChips } from "./RegExpChips";
-import {RegExpTestPanel} from './RegExpTestPanel'
+import { RegExpTestPanel } from "./RegExpTestPanel";
 
 declare module "@material-ui/core/styles/createMuiTheme" {
   interface Theme {
@@ -51,7 +54,7 @@ enum TabIndex {
 
 const useStyles = makeStyles((theme) => ({
   regexpInput: {
-    fontSize: 20,
+    fontSize: "1.6rem",
     fontFamily: theme.codeFontFamily,
   },
   code: {
@@ -351,7 +354,7 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`;
           >
             <Tooltip title={`帮助`}>
               <IconButton
-                onClick={() => { }}
+                onClick={() => {}}
                 component="a"
                 href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions"
                 target="_blank"
@@ -470,18 +473,7 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`;
               <CodeBlock code={code} language="javascript" />
             </CardContent>
             <CardActions>
-              <CopyToClipboard
-                text={code}
-                onCopy={() =>
-                  enqueueSnackbar("已复制!", { autoHideDuration: 1500 })
-                }
-              >
-                <Tooltip title="复制" placement="top">
-                  <IconButton>
-                    <FileCopy />
-                  </IconButton>
-                </Tooltip>
-              </CopyToClipboard>
+              <CopyAction text={code} />
             </CardActions>
           </Collapse>
         </Card>
