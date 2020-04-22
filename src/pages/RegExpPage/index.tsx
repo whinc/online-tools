@@ -18,7 +18,6 @@ import {
   MenuItem,
 } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
-import { green, red, grey } from "@material-ui/core/colors";
 import { useQuery } from "hooks";
 import { debugErr } from "utils";
 import {
@@ -28,6 +27,7 @@ import clsx from "clsx";
 import { VisualRegExp, RegExpType, CodeBlock, CopyAction, OutLink } from "components";
 import { RegExpChips } from "./RegExpChips";
 import { RegExpTestPanel } from "./RegExpTestPanel";
+import {RegExpMatchPanel} from './RegExpMatchPanel'
 
 declare module "@material-ui/core/styles/createMuiTheme" {
   interface Theme {
@@ -99,53 +99,53 @@ const TabPanel: React.FC<{ id: number; value: number }> = ({
   return <Box {...props}>{id === value && <Box pt={3}>{children}</Box>}</Box>;
 };
 
-const RegExpMatchPanel: React.FC<PanelProps> = ({
-  regexp,
-  value,
-  onChange,
-}) => {
-  const isEmpty = !value || !regexp.source;
-  const matches = useMemo(() => {
-    if (isEmpty) return null;
+// const RegExpMatchPanel: React.FC<PanelProps> = ({
+//   regexp,
+//   value,
+//   onChange,
+// }) => {
+//   const isEmpty = !value || !regexp.source;
+//   const matches = useMemo(() => {
+//     if (isEmpty) return null;
 
-    let jsRegExp;
-    try {
-      jsRegExp = new RegExp(regexp.source, regexp.flags);
-      return jsRegExp.exec(value);
-    } catch (err) {
-      debugErr(err);
-      return null;
-    }
-  }, [isEmpty, regexp, value]);
-  return (
-    <>
-      <Box>
-        <TextField
-          variant="outlined"
-          label="输入源文本"
-          multiline
-          fullWidth
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      </Box>
-      <Box mt={2}>
-        {isEmpty && <Box color={grey[500]}>--</Box>}
-        {!isEmpty && matches === null && <Box color={red[500]}>不匹配!</Box>}
-        {!isEmpty && matches !== null && (
-          <Box>
-            <Box color={green[500]}>匹配!</Box>
-            <Box style={{ overflow: "auto" }}>
-              {matches.map((group, n) => (
-                <NameValue name={`分组 #${n}`} value={group} />
-              ))}
-            </Box>
-          </Box>
-        )}
-      </Box>
-    </>
-  );
-};
+//     let jsRegExp;
+//     try {
+//       jsRegExp = new RegExp(regexp.source, regexp.flags);
+//       return jsRegExp.exec(value);
+//     } catch (err) {
+//       debugErr(err);
+//       return null;
+//     }
+//   }, [isEmpty, regexp, value]);
+//   return (
+//     <>
+//       <Box>
+//         <TextField
+//           variant="outlined"
+//           label="输入源文本"
+//           multiline
+//           fullWidth
+//           value={value}
+//           onChange={(e) => onChange(e.target.value)}
+//         />
+//       </Box>
+//       <Box mt={2}>
+//         {isEmpty && <Box color={grey[500]}>--</Box>}
+//         {!isEmpty && matches === null && <Box color={red[500]}>不匹配!</Box>}
+//         {!isEmpty && matches !== null && (
+//           <Box>
+//             <Box color={green[500]}>匹配!</Box>
+//             <Box style={{ overflow: "auto" }}>
+//               {matches.map((group, n) => (
+//                 <NameValue name={`分组 #${n}`} value={group} />
+//               ))}
+//             </Box>
+//           </Box>
+//         )}
+//       </Box>
+//     </>
+//   );
+// };
 
 type RegExpReplacePanelProps = PanelProps & {
   newValue: string;
@@ -395,7 +395,8 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`;
             <RegExpTestPanel source={regexp.source} flags={regexp.flags} />
           </TabPanel>
           <TabPanel id={TabIndex.MATCH} value={tabIndex}>
-            <RegExpMatchPanel regexp={regexp} value={text} onChange={setText} />
+            <RegExpMatchPanel source={regexp.source} flags={regexp.flags} />
+            {/* <RegExpMatchPanel regexp={regexp} value={text} onChange={setText} /> */}
           </TabPanel>
           <TabPanel id={TabIndex.REPLACE} value={tabIndex}>
             <RegExpReplacePanel

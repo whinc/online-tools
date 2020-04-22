@@ -25,3 +25,7 @@ export const copyToClipboard = (text: string): boolean => {
     return true
   }
 }
+
+export function comment (str: any) {
+  return String(str).replace(/(^|\n)/g, '$1// ')
+}
