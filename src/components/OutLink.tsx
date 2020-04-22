@@ -1,6 +1,6 @@
 import React from "react";
 import { Tooltip, IconButton } from "@material-ui/core";
-import { LinkOutlined } from "@material-ui/icons";
+import { OpenInNew } from "@material-ui/icons";
 
 export type OutLinkProps = {
   href: string;
@@ -11,7 +11,7 @@ export const OutLink: React.FC<OutLinkProps> = ({ href, title = "" }) => {
   return (
     <Tooltip title={title}>
       <IconButton component="a" href={href} target="_blank">
-        <LinkOutlined />
+        <OpenInNew />
       </IconButton>
     </Tooltip>
   );

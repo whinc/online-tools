@@ -1,11 +1,10 @@
 
 import React from "react";
-import {Box, GridList, GridListTile, GridListTileBar, IconButton} from '@material-ui/core'
+import {Box, GridList, GridListTile, GridListTileBar} from '@material-ui/core'
 import {makeStyles} from '@material-ui/core/styles'
 import PageLayout from 'layout/PageLayout'
 import {useHistory} from 'react-router-dom'
 import regexp from 'assets/regexp.svg'
-import { Launch } from "@material-ui/icons";
 
 const useStyles = makeStyles({
   clickable: {
@@ -15,7 +14,7 @@ const useStyles = makeStyles({
   }
 })
 
-const IndexPage: React.FC = () => {
+const HomePage: React.FC = () => {
   const styles = useStyles()
   const history = useHistory()
   return (
@@ -25,7 +24,6 @@ const IndexPage: React.FC = () => {
           <img src={regexp} alt='正则表达式' />
           <GridListTileBar
             title='正则表达式'
-            actionIcon={<IconButton><Launch htmlColor='white'/></IconButton>}
           />
         </GridListTile>
         <GridListTile className={styles.clickable}>
@@ -39,4 +37,4 @@ const IndexPage: React.FC = () => {
   );
 }
 
-export default IndexPage;
+export default HomePage;

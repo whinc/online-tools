@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Tooltip, IconButton } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import CopyToClipboard from "react-copy-to-clipboard";
-import { FileCopy } from "@material-ui/icons";
+import { FileCopyOutlined } from "@material-ui/icons";
 import { useSnackbar } from "notistack";
 
 export type CopyActionProps = {
@@ -20,7 +20,7 @@ export const CopyAction: React.FC<CopyActionProps> = ({text}) => {
       >
         <Tooltip title="复制" placement="top">
           <IconButton>
-            <FileCopy />
+            <FileCopyOutlined />
           </IconButton>
         </Tooltip>
       </CopyToClipboard>

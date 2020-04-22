@@ -11,7 +11,7 @@ const routes: RouteConfig[] = [
   {
     path: '/home',
     exact: true,
-    component: React.lazy(() => import('pages/IndexPage'))
+    component: React.lazy(() => import('pages/HomePage'))
   },
   {
     path: '/regexp',
