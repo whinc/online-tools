@@ -11,4 +11,6 @@
 ![QR](./public/qr.png)
 
 
-# MIT
+## License
+
+MIT
