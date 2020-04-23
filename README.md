@@ -1,13 +1,14 @@
-# online-tools
+# 程序员的在线工具箱
 
-体验地址：<https://whinc.github.io/online-tools/>
+[![Actions Status](https://github.com/whinc/online-tools/workflows/CI/badge.svg)](https://github.com/whinc/online-tools/actions)
+
+使用 H5 编写的程序员常用的在线工具箱，适配桌面、平板、手机，保证随时随地可访问，代码开源放心使用。大佬如果觉得还不错，请给个赞吧~
+
+桌面访问：<https://whinc.github.io/online-tools/>
+
+手机访问：
 
 ![QR](./public/qr.png)
 
-# 技术栈
-
-本项目所使用的部分开源项目
-- [Create React App](https://create-react-app.dev/)
-- [Material UI](https://material-ui.com/)
 
 # MIT
