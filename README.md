@@ -8,7 +8,7 @@
 
 手机访问：
 
-![QR](./public/qr.png)
+[![QR](./public/qr.png)](https://whinc.github.io/online-tools/)
 
 
 ## License
