@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { Box, TextField, Typography } from '@material-ui/core'
 import { CodeBlock, CopyAction, OutLink } from 'components'
 
@@ -7,25 +7,34 @@ export type RegExpTestPanelProps = {
   flags?: string
 }
 
-export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({
-  source,
-  flags,
-}) => {
+export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({ source, flags }) => {
   const [text, setText] = useState('')
-  const { result1, result2, code1, code2, error } = useMemo(() => {
+  const { code1, result1, error1, code2, result2, error2 } = useMemo(() => {
+    let regexp, result1, result2, error1, error2
     try {
-      const regexp = new RegExp(source, flags)
-      const result1 = regexp.test(text)
-      const result2 = text.search(regexp)
-      const escapedText = text.replace(/'/g, "\\'")
-      const code1 = `const result = ${regexp}.test('${escapedText}')`
-      const code2 = `const result = '${escapedText}'.search(${regexp})`
-      return { result1, code1, code2, result2 }
+      regexp = new RegExp(source, flags)
+      result1 = regexp.test(text)
+      result2 = text.search(regexp)
     } catch (error) {
-      return { error: error as Error }
+      regexp = `/${source}/${flags}`
+      error1 = error2 = error as Error
     }
+    // 无论构建正则是否抛出异常，源码都要正确显示
+    const escapedText = text.replace(/'/g, "\\'")
+    const code1 = `const result = ${regexp}.test('${escapedText}')`
+    const code2 = `const result = '${escapedText}'.search(${regexp})`
+    return { code1, result1, error1, code2, result2, error2 }
   }, [flags, source, text])
-  if (error) return <Typography color="error">{error.message}</Typography>
+
+  // 输出到控制台
+  useEffect(() => {
+    console.log(code1)
+    console.log(result1)
+    console.log(code2)
+    console.log(result2)
+  }, [code1, code2, result1, result2])
+
+
   return (
     <Box display="flex" flexDirection="column">
       <Box>
@@ -39,13 +48,7 @@ export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({
         />
       </Box>
       <Box overflow="auto">
-        <Box
-          mt={2}
-          display="flex"
-          alignItems="center"
-          flexWrap="wrap"
-          bgcolor="rgb(246, 248, 250)"
-        >
+        <Box mt={2} display="flex" alignItems="center" flexWrap="wrap" bgcolor="rgb(246, 248, 250)">
           <Box flexGrow={1}>
             <CodeBlock code={`${code1!}`} language="javascript" />
           </Box>
@@ -60,15 +63,13 @@ export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({
           </Box>
         </Box>
         <Box>
-          <CodeBlock code={'// result\n' + result1} language="javascript" />
+          {error1 ? (
+            <Typography color="error">{String(error1)}</Typography>
+          ) : (
+            <CodeBlock code={'// result\n' + result1} language="javascript" />
+          )}
         </Box>
-        <Box
-          mt={2}
-          display="flex"
-          alignItems="center"
-          flexWrap="wrap"
-          bgcolor="rgb(246, 248, 250)"
-        >
+        <Box mt={2} display="flex" alignItems="center" flexWrap="wrap" bgcolor="rgb(246, 248, 250)">
           <Box flexGrow={1}>
             <CodeBlock code={`${code2!}`} language="javascript" />
           </Box>
@@ -83,7 +84,11 @@ export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({
           </Box>
         </Box>
         <Box>
-          <CodeBlock code={'// result\n' + (result2)} language="javascript" />
+          {error2 ? (
+            <Typography color="error">{String(error2)}</Typography>
+          ) : (
+            <CodeBlock code={'// result\n' + result2} language="javascript" />
+          )}
         </Box>
       </Box>
     </Box>

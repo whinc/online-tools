@@ -48,7 +48,7 @@ enum TabIndex {
 
 const useStyles = makeStyles((theme) => ({
   regexpInput: {
-    fontSize: "1.6em",
+    fontSize: "1.4em",
     fontFamily: theme.codeFontFamily,
   },
   code: {
