@@ -35,9 +35,9 @@ export const RegExpMatchPanel: React.FC<RegExpMatchPanelProps> = ({ source, flag
       }
     }
     const escapedText = text.replace(/'/g, "\\'")
-    const code1 = `const result = ${regexp}.exec('${escapedText}')`
-    const code2 = `const result = '${escapedText}'.match(${regexp})`
-    const code3 = `const result ='${escapedText}'.matchAll(${regexp})`
+    const code1 = `const result = ${regexp}.exec('${escapedText}');`
+    const code2 = `const result = '${escapedText}'.match(${regexp});`
+    const code3 = `const result = '${escapedText}'.matchAll(${regexp});`
 
     return { code1, result1, error1, code2, result2, error2, code3, result3, error3 }
   }, [flags, source, text])

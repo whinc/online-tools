@@ -21,8 +21,8 @@ export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({ source, flags 
     }
     // 无论构建正则是否抛出异常，源码都要正确显示
     const escapedText = text.replace(/'/g, "\\'")
-    const code1 = `const result = ${regexp}.test('${escapedText}')`
-    const code2 = `const result = '${escapedText}'.search(${regexp})`
+    const code1 = `const result = ${regexp}.test('${escapedText}');`
+    const code2 = `const result = '${escapedText}'.search(${regexp});`
     return { code1, result1, error1, code2, result2, error2 }
   }, [flags, source, text])
 
