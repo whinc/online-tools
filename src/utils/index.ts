@@ -5,6 +5,10 @@ export const debugLog = (...args: any[]) =>
 export const debugWarn = (...args: any[]) =>
   process.env.NODE_ENV !== "production" && console.warn(...args);
 
+// 转义代码
+export const escape = (str: string, quote: string) =>
+  str.replace(new RegExp(quote, 'g'), '\\' + quote).replace(/\n/g, '\\n')
+
 export const copyToClipboard = (text: string): boolean => {
   const textArea = document.createElement('textarea')
 

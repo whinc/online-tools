@@ -18,7 +18,7 @@ export const CopyAction: React.FC<CopyActionProps> = ({text}) => {
         text={text}
         onCopy={() => enqueueSnackbar("已复制!", { autoHideDuration: 1500 })}
       >
-        <Tooltip title="复制" placement="top">
+        <Tooltip title="复制">
           <IconButton>
             <FileCopyOutlined />
           </IconButton>

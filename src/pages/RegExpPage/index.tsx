@@ -79,72 +79,6 @@ const TabPanel: React.FC<{ id: number; value: number }> = ({ children, id, value
   return <Box {...props}>{id === value && <Box pt={3}>{children}</Box>}</Box>
 }
 
-// const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({
-//   regexp,
-//   value,
-//   onChange,
-//   newValue,
-//   onNewValueChange,
-// }) => {
-//   const [newSubText, matches] = useMemo(() => {
-//     let jsRegExp;
-//     try {
-//       jsRegExp = new RegExp(regexp.source, regexp.flags);
-//     } catch (err) {
-//       debugErr(err);
-//       return ["", null];
-//     }
-//     const newSubText = value.replace(jsRegExp, newValue);
-//     const matches = jsRegExp.exec(value);
-//     console.log("matches:", matches);
-//     return [newSubText, matches];
-//   }, [regexp.flags, regexp.source, newValue, value]);
-//   return (
-//     <>
-//       <Box>
-//         <TextField
-//           variant="outlined"
-//           label="输入源文本"
-//           multiline
-//           fullWidth
-//           value={value}
-//           onChange={(e) => onChange(e.target.value)}
-//         />
-//       </Box>
-//       {matches !== null && (
-//         <Box mt={2}>
-//           <NameValue name="$$" value="$" />
-//           <NameValue name="$&" value={matches[0]} />
-//           <NameValue
-//             name="$`"
-//             value={matches.input.substring(0, matches.index)}
-//           />
-//           <NameValue
-//             name="$'"
-//             value={matches.input.substring(matches.index + matches[0].length)}
-//           />
-//           {matches.map((group, n) =>
-//             n >= 1 ? <NameValue name={"$" + n} value={group} /> : null
-//           )}
-//         </Box>
-//       )}
-//       <Box mt={2}>
-//         <TextField
-//           variant="outlined"
-//           label="输入替换文本"
-//           multiline
-//           fullWidth
-//           value={newValue}
-//           onChange={(e) => onNewValueChange(e.target.value)}
-//         />
-//       </Box>
-//       <Box mt={2}>
-//         <Box>{newSubText}</Box>
-//       </Box>
-//     </>
-//   );
-// };
-
 const flagItems = [
   {
     flag: 'g',
@@ -345,13 +279,6 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`
             <RegExpMatchPanel source={regexp.source} flags={regexp.flags} />
           </TabPanel>
           <TabPanel id={TabIndex.REPLACE} value={tabIndex}>
-            {/* <RegExpReplacePanel
-              regexp={regexp}
-              value={text}
-              onChange={setText}
-              newValue={newText}
-              onNewValueChange={setNewText}
-            /> */}
             <RegExpReplacePanel source={regexp.source} flags={regexp.flags} />
           </TabPanel>
           <TabPanel id={TabIndex.COMMONLY_USED_REGEXP} value={tabIndex}>

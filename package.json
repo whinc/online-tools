@@ -7,6 +7,7 @@
     "@material-ui/icons": "^4.9.1",
     "@material-ui/system": "^4.9.10",
     "clsx": "^1.1.0",
+    "lodash": "^4.17.15",
     "notistack": "^0.9.10",
     "prism-react-renderer": "^1.0.2",
     "react": "^16.13.1",
@@ -40,7 +41,7 @@
   "prettier": {
     "printWidth": 100,
     "semi": false,
-    "singleQuote": true 
+    "singleQuote": true
   },
   "browserslist": {
     "production": [
@@ -56,6 +57,7 @@
   },
   "devDependencies": {
     "@types/jest": "^24.9.1",
+    "@types/lodash": "^4.14.150",
     "@types/node": "^13.13.0",
     "@types/react": "^16.9.34",
     "@types/react-copy-to-clipboard": "^4.3.0",

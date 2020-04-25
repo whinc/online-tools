@@ -1,52 +1,19 @@
 import React from "react";
-import Highlight, { defaultProps } from "prism-react-renderer";
+import Highlight, { defaultProps, Language } from "prism-react-renderer";
 import githubTheme from "prism-react-renderer/themes/github";
 import { Box } from "@material-ui/core";
 
-export type Language =
-  | "markup"
-  | "bash"
-  | "clike"
-  | "c"
-  | "cpp"
-  | "css"
-  | "javascript"
-  | "jsx"
-  | "coffeescript"
-  | "actionscript"
-  | "css-extr"
-  | "diff"
-  | "git"
-  | "go"
-  | "graphql"
-  | "handlebars"
-  | "json"
-  | "less"
-  | "makefile"
-  | "markdown"
-  | "objectivec"
-  | "ocaml"
-  | "python"
-  | "reason"
-  | "sass"
-  | "scss"
-  | "sql"
-  | "stylus"
-  | "tsx"
-  | "typescript"
-  | "wasm"
-  | "yaml";
-
 export type CodeBlockProps = {
-  code: string;
-  language: Language;
+  code?: string;
+  children?: string | string[]
+  language?: Language;
 };
 
-export const CodeBlock: React.FC<CodeBlockProps> = ({ code, language }) => {
+export const CodeBlock: React.FC<CodeBlockProps> = ({ code = '', language = 'json',  children = '' }) => {
   return (
     <Highlight
       {...defaultProps}
-      code={code}
+      code={code || (Array.isArray(children) ? children.join('') : children)}
       language={language}
       theme={githubTheme}
     >
