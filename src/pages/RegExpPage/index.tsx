@@ -15,16 +15,23 @@ import {
   Collapse,
   Button,
   MenuItem,
+  IconButton,
+  Tooltip,
+  Popper,
+  RadioGroup,
+  Radio,
+  Paper,
 } from '@material-ui/core'
 import { makeStyles, useTheme } from '@material-ui/core/styles'
 import { useQuery } from 'hooks'
-import { ExpandMore } from '@material-ui/icons'
+import { ExpandMore, Settings } from '@material-ui/icons'
 import clsx from 'clsx'
 import { VisualRegExp, RegExpType, CodeBlock, CopyAction, OutLink } from 'components'
 import { RegExpChips } from './RegExpChips'
 import { RegExpTestPanel } from './RegExpTestPanel'
 import { RegExpMatchPanel } from './RegExpMatchPanel'
 import { RegExpReplacePanel } from './RegExpReplacePanel'
+import { TQuote } from './types'
 
 declare module '@material-ui/core/styles/createMuiTheme' {
   interface Theme {
@@ -74,7 +81,6 @@ type PanelProps = {
   onChange: (newValue: string) => void
 }
 
-
 const TabPanel: React.FC<{ id: number; value: number }> = ({ children, id, value, ...props }) => {
   return <Box {...props}>{id === value && <Box pt={3}>{children}</Box>}</Box>
 }
@@ -118,19 +124,20 @@ const useTabIndex = (defaultValue: number = TabIndex.TEST) => {
     [query, setQuery]
   )
   return [tabIndex, setTabIndex] as const
-
 }
 
 const RegExpPage: React.FC = () => {
   const styles = useStyles()
-  const [tabIndex, setTabIndex] = useTabIndex(TabIndex.TEST);
+  const [tabIndex, setTabIndex] = useTabIndex(TabIndex.TEST)
   const [regexp, setRegexp] = useRegExp()
   const [text] = useState('')
   const [newText] = useState('')
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const theme = useTheme()
   const matches = useMediaQuery(theme.breakpoints.down('sm'))
   const [expanded, setExpanded] = useState(false)
   const [language, setLanguage] = useState(Language.JavaScript)
+  const [quote, setQuote] = useState<TQuote>('`')
 
   // 单个标志位变化
   const onFlagChange = (flag: 'g' | 'i' | 'm', checked: boolean) => {
@@ -228,6 +235,23 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`
               }
             />
             <CopyAction text={`/${regexp.source}/${regexp.flags}`} />
+
+            <Tooltip title="设置">
+              <IconButton onClick={(e) => setAnchorEl(anchorEl ? null : e.currentTarget)}>
+                <Settings />
+              </IconButton>
+            </Tooltip>
+            <Popper open={!!anchorEl} anchorEl={anchorEl} placement='left-start'>
+              <Paper>
+                <Box p={1}>
+                <RadioGroup value={quote} onChange={(e, value) => setQuote(value as TQuote)}>
+                  <FormControlLabel value='"' control={<Radio />} label='双引号(")' />
+                  <FormControlLabel value="'" control={<Radio />} label="单引号(')" />
+                  <FormControlLabel value="`" control={<Radio />} label="反引号(`)" />
+                </RadioGroup>
+                </Box>
+              </Paper>
+            </Popper>
           </Box>
         </Box>
 
@@ -273,13 +297,13 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`
             <Tab label="常用正则"></Tab>
           </Tabs>
           <TabPanel id={TabIndex.TEST} value={tabIndex}>
-            <RegExpTestPanel source={regexp.source} flags={regexp.flags} />
+            <RegExpTestPanel source={regexp.source} flags={regexp.flags} quote={quote} />
           </TabPanel>
           <TabPanel id={TabIndex.MATCH} value={tabIndex}>
-            <RegExpMatchPanel source={regexp.source} flags={regexp.flags} />
+            <RegExpMatchPanel source={regexp.source} flags={regexp.flags} quote={quote}/>
           </TabPanel>
           <TabPanel id={TabIndex.REPLACE} value={tabIndex}>
-            <RegExpReplacePanel source={regexp.source} flags={regexp.flags} />
+            <RegExpReplacePanel source={regexp.source} flags={regexp.flags} quote={quote} />
           </TabPanel>
           <TabPanel id={TabIndex.COMMONLY_USED_REGEXP} value={tabIndex}>
             <RegExpChips onSelect={(regexp) => setRegexp(regexp)} />

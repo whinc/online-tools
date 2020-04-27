@@ -1,13 +1,16 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import { Box, TextField, Typography } from '@material-ui/core'
 import { CodeBlock, CopyAction, OutLink } from 'components'
+import { TQuote } from './types'
+import { escape } from 'utils'
 
 export type RegExpTestPanelProps = {
   source: string
   flags?: string
+  quote?: TQuote
 }
 
-export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({ source, flags }) => {
+export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({ source, flags, quote = '`' }) => {
   const [text, setText] = useState('')
   const { code1, result1, error1, code2, result2, error2 } = useMemo(() => {
     let regexp, result1, result2, error1, error2
@@ -20,11 +23,11 @@ export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({ source, flags 
       error1 = error2 = error as Error
     }
     // 无论构建正则是否抛出异常，源码都要正确显示
-    const escapedText = text.replace(/'/g, "\\'")
-    const code1 = `const result = ${regexp}.test('${escapedText}');`
-    const code2 = `const result = '${escapedText}'.search(${regexp});`
+    const escapedText = escape(text, quote)
+    const code1 = `${regexp}.test(${quote}${escapedText}${quote})`
+    const code2 = `${quote}${escapedText}${quote}.search(${regexp})`
     return { code1, result1, error1, code2, result2, error2 }
-  }, [flags, source, text])
+  }, [flags, quote, source, text])
 
   // 输出到控制台
   useEffect(() => {
@@ -66,7 +69,7 @@ export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({ source, flags 
           {error1 ? (
             <Typography color="error">{String(error1)}</Typography>
           ) : (
-            <CodeBlock code={'// result\n' + result1} language="javascript" />
+            <CodeBlock code={'// returns\n' + result1} language="javascript" />
           )}
         </Box>
         <Box mt={2} display="flex" alignItems="center" flexWrap="wrap" bgcolor="rgb(246, 248, 250)">
@@ -87,7 +90,7 @@ export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({ source, flags 
           {error2 ? (
             <Typography color="error">{String(error2)}</Typography>
           ) : (
-            <CodeBlock code={'// result\n' + result2} language="javascript" />
+            <CodeBlock code={'// returns\n' + result2} language="javascript" />
           )}
         </Box>
       </Box>

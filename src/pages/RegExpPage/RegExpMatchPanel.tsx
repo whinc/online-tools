@@ -1,15 +1,18 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import { Box, TextField, Typography } from '@material-ui/core'
 import { CodeBlock, CopyAction, OutLink } from 'components'
+import { TQuote } from './types'
+import { escape } from 'utils'
 
 export type RegExpMatchPanelProps = {
   source: string
   flags?: string
+  quote?: TQuote
 }
 
 const supportMatchAll = 'matchAll' in String.prototype
 
-export const RegExpMatchPanel: React.FC<RegExpMatchPanelProps> = ({ source, flags }) => {
+export const RegExpMatchPanel: React.FC<RegExpMatchPanelProps> = ({ source, flags, quote = '`' }) => {
   const [text, setText] = useState('')
   const { code1, result1, error1, code2, result2, error2, code3, result3, error3 } = useMemo(() => {
     let regexp, result1, result2, result3, error1, error2, error3
@@ -34,13 +37,13 @@ export const RegExpMatchPanel: React.FC<RegExpMatchPanelProps> = ({ source, flag
         error3 = error as Error
       }
     }
-    const escapedText = text.replace(/'/g, "\\'")
-    const code1 = `const result = ${regexp}.exec('${escapedText}');`
-    const code2 = `const result = '${escapedText}'.match(${regexp});`
-    const code3 = `const result = '${escapedText}'.matchAll(${regexp});`
+    const escapedText = escape(text, quote)
+    const code1 = `${regexp}.exec(${quote}${escapedText}${quote})`
+    const code2 = `${quote}${escapedText}${quote}.match(${regexp});`
+    const code3 = `${quote}${escapedText}${quote}.matchAll(${regexp});`
 
     return { code1, result1, error1, code2, result2, error2, code3, result3, error3 }
-  }, [flags, source, text])
+  }, [flags, quote, source, text])
 
   // 输出到控制台
   useEffect(() => {
@@ -108,7 +111,7 @@ export const RegExpMatchPanel: React.FC<RegExpMatchPanelProps> = ({ source, flag
             <Typography color="error">{String(error2)}</Typography>
           ) : (
             <CodeBlock
-              code={'// result\n' + stringifyRegExpMatchArray(result2)}
+              code={ '// result\n' + stringifyRegExpMatchArray(result2)}
               language="javascript"
             />
           )}

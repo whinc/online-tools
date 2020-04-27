@@ -15,15 +15,15 @@ import {
 import { CodeBlock, CopyAction, OutLink } from 'components'
 import { escape } from 'utils'
 import _ from 'lodash'
+import { TQuote } from './types'
 
 export type RegExpReplacePanelProps = {
   source: string
   flags?: string
+  quote?: TQuote
 }
 
-const quote = '`'
-
-export const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({ source, flags }) => {
+export const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({ source, flags, quote = '`' }) => {
   const [text, setText] = useState('')
   const [replacer, setReplacer] = useState('')
   const [isReplacerInfoVisible, setIsReplacerInfoVisible] = useState(false)
@@ -81,9 +81,9 @@ export const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({ source, 
       error1 = error as Error
     }
     // 无论构建正则是否抛出异常，源码都要正确显示
-    const code1 = `${quote}${escape(text, quote)}${quote}.replace(${regexp}, ${replacerLiteral});`
+    const code1 = `${quote}${escape(text, quote)}${quote}.replace(${regexp}, ${replacerLiteral})`
     return { code1, result1, error1, matches }
-  }, [flags, isReplacerStr, replacer, source, text])
+  }, [flags, isReplacerStr, quote, replacer, source, text])
 
   // 输出到控制台
   useEffect(() => {

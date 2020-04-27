@@ -1,3 +1,5 @@
+import { TQuote } from "pages/RegExpPage/types";
+
 export const debugErr = (...args: any[]) =>
   process.env.NODE_ENV !== "production" && console.error(...args);
 export const debugLog = (...args: any[]) =>
@@ -5,10 +7,18 @@ export const debugLog = (...args: any[]) =>
 export const debugWarn = (...args: any[]) =>
   process.env.NODE_ENV !== "production" && console.warn(...args);
 
-// 转义代码
-export const escape = (str: string, quote: string) =>
+/**
+ * 转义字符串
+ * @param str 
+ * @param quote 
+ */
+export const escape = (str: string, quote: TQuote) =>
   str.replace(new RegExp(quote, 'g'), '\\' + quote).replace(/\n/g, '\\n')
 
+/**
+ * 复制到剪切板
+ * @param text 
+ */
 export const copyToClipboard = (text: string): boolean => {
   const textArea = document.createElement('textarea')
 
