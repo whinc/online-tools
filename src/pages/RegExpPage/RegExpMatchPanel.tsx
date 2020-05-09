@@ -1,49 +1,52 @@
-import React, { useMemo, useState, useEffect } from 'react'
-import { Box, TextField, Typography } from '@material-ui/core'
-import { CodeBlock, CopyAction, OutLink } from 'components'
-import { TQuote } from './types'
-import { escape } from 'utils'
+  import React, { useMemo, useState, useEffect } from 'react'
+  import { Box, TextField, Typography } from '@material-ui/core'
+  import { CodeBlock, CopyAction, OutLink } from 'components'
+  import { TQuote } from './types'
+  import { escapeStr, unescapeStr, escapeQuote } from 'utils'
 
-export type RegExpMatchPanelProps = {
-  source: string
-  flags?: string
-  quote?: TQuote
-}
+  export type RegExpMatchPanelProps = {
+    source: string
+    flags?: string
+    quote: TQuote
+    escape: boolean
+  }
 
-const supportMatchAll = 'matchAll' in String.prototype
+  const supportMatchAll = 'matchAll' in String.prototype
 
-export const RegExpMatchPanel: React.FC<RegExpMatchPanelProps> = ({ source, flags, quote = '`' }) => {
-  const [text, setText] = useState('')
-  const { code1, result1, error1, code2, result2, error2, code3, result3, error3 } = useMemo(() => {
-    let regexp, result1, result2, result3, error1, error2, error3
-    try {
-      // 抛出异常情况：
-      // 1. 正则表达式不合法
-      regexp = new RegExp(source, flags)
-    } catch (error) {
-      regexp = (`/${source}/${flags}` as any) as RegExp
-      error1 = error2 = error3 = error as Error
-    }
-
-    if (!error1) {
-      result1 = regexp.exec(text)
-      result2 = text.match(regexp)
+  export const RegExpMatchPanel: React.FC<RegExpMatchPanelProps> = ({ source, flags, quote, escape}) => {
+    const [text, setText] = useState('')
+    const { code1, result1, error1, code2, result2, error2, code3, result3, error3 } = useMemo(() => {
+      let regexp, result1, result2, result3, error1, error2, error3
+      // 从输入框中取到的值是已经转义过了的
+      const _text = escape ? text : unescapeStr(text)
       try {
-        // 抛出异常的情况：
-        // 1. 浏览器不支持 matchAll 时抛异常
-        // 2. 正则的 g 标志位未设置时抛异常
-        result3 = text.matchAll(regexp)
+        // 抛出异常情况：
+        // 1. 正则表达式不合法
+        regexp = new RegExp(source, flags)
       } catch (error) {
-        error3 = error as Error
+        regexp = (`/${source}/${flags}` as any) as RegExp
+        error1 = error2 = error3 = error as Error
       }
-    }
-    const escapedText = escape(text, quote)
+
+      if (!error1) {
+        result1 = regexp.exec(_text)
+        result2 = _text.match(regexp)
+        try {
+          // 抛出异常的情况：
+          // 1. 浏览器不支持 matchAll 时抛异常
+          // 2. 正则的 g 标志位未设置时抛异常
+          result3 = _text.matchAll(regexp)
+        } catch (error) {
+          error3 = error as Error
+        }
+      }
+      const escapedText = escapeQuote(escapeStr(_text), quote)
     const code1 = `${regexp}.exec(${quote}${escapedText}${quote})`
     const code2 = `${quote}${escapedText}${quote}.match(${regexp});`
     const code3 = `${quote}${escapedText}${quote}.matchAll(${regexp});`
 
     return { code1, result1, error1, code2, result2, error2, code3, result3, error3 }
-  }, [flags, quote, source, text])
+  }, [escape, flags, quote, source, text])
 
   // 输出到控制台
   useEffect(() => {

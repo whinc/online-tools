@@ -13,23 +13,31 @@ import {
   Switch,
 } from '@material-ui/core'
 import { CodeBlock, CopyAction, OutLink } from 'components'
-import { escape } from 'utils'
+import { escapeStr, unescapeStr, escapeQuote } from 'utils'
 import _ from 'lodash'
-import { TQuote } from './types'
+import { TQuote} from './types'
 
 export type RegExpReplacePanelProps = {
   source: string
   flags?: string
-  quote?: TQuote
+  quote: TQuote
+  escape: boolean
 }
 
-export const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({ source, flags, quote = '`' }) => {
+export const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({
+  source,
+  flags,
+  quote,
+  escape,
+}) => {
   const [text, setText] = useState('')
   const [replacer, setReplacer] = useState('')
   const [isReplacerInfoVisible, setIsReplacerInfoVisible] = useState(false)
   const [isReplacerStr, setIsReplaceStr] = useState(true)
+  const _text = escape ? text : unescapeStr(text)
   const { code1, result1, error1, matches } = useMemo(() => {
     let regexp, result1, error1
+    // 从输入框中取到的值是已经转义过了的
     let matches: RegExpExecArray[] = []
     // String.prototype.replace() 的第二参数的字面值(显示给用户)
     let replacerLiteral = ''
@@ -48,11 +56,11 @@ export const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({ source, 
       // const matches: RegExpExecArray[] = []
       if (regexp.global) {
         let match
-        while ((match = regexp.exec(text))) {
+        while ((match = regexp.exec(_text))) {
           matches.push(match)
         }
       } else {
-        const match = regexp.exec(text)
+        const match = regexp.exec(_text)
         if (match) {
           matches.push(match)
         }
@@ -61,35 +69,43 @@ export const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({ source, 
       // String.prototype.replace() 的第二参数
       let _replacer: string | Function = ''
       if (isReplacerStr) {
-        replacerLiteral = `${quote}${escape(replacer, quote)}${quote}`
-        _replacer = replacer.replace(/\\n/g, '\n')
+        replacerLiteral = `${quote}${escapeQuote(escapeStr(replacer), quote)}${quote}`
+        _replacer = escape ? replacer : unescapeStr(replacer)
       } else {
-        const groupsLiteral =
-          matches.length > 0 ? matches[0].filter((v, i) => i > 0).reduce((str, b, n) => str + `, p${n + 1}`, '') : ''
+        const argsLiteral =
+          matches.length > 0
+            ? matches[0].filter((v, i) => i > 0).reduce((str, b, n) => str + `, p${n + 1}`, '')
+            : ''
         const indent = (source: string) => source.replace(/(^|\n)/g, '$&  ')
-        replacerLiteral = `function replacer(match${groupsLiteral}, offset, input) {\n${indent(
+        replacerLiteral = `function replacer(match${argsLiteral}, offset, input) {\n${indent(
           replacer
         )}\n}`
         // eslint-disable-next-line no-new-func
         _replacer = new Function(`return ${replacerLiteral}`)()
       }
       // 执行替换
-      result1 = text.replace(regexp, _replacer as any)
+      result1 = _text.replace(regexp, _replacer as any)
     } catch (error) {
       console.error(error)
       regexp = `/${source}/${flags}`
       error1 = error as Error
     }
     // 无论构建正则是否抛出异常，源码都要正确显示
-    const code1 = `${quote}${escape(text, quote)}${quote}.replace(${regexp}, ${replacerLiteral})`
+    const code1 = `${quote}${escapeQuote(
+      escapeStr(_text),
+      quote
+    )}${quote}.replace(${regexp}, ${replacerLiteral})`
     return { code1, result1, error1, matches }
-  }, [flags, isReplacerStr, quote, replacer, source, text])
+  }, [_text, escape, flags, isReplacerStr, quote, replacer, source])
 
   // 输出到控制台
   useEffect(() => {
-    console.log(code1)
-    console.log(result1)
-  }, [code1, result1])
+    if (process.env.NODE_ENV === 'development') {
+      console.log('code1', code1)
+      console.log('result1', result1)
+      console.log('matches:', matches)
+    }
+  }, [code1, matches, result1])
 
   return (
     <Box display="flex" flexDirection="column">
@@ -106,8 +122,10 @@ export const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({ source, 
       <Box mt={1}>
         <TextField
           variant="outlined"
-          label={isReplacerStr ? "替换子串" : "替换函数"}
-          placeholder={isReplacerStr ? "输入子串，支持 $$, $&, $`, $', $n 等特殊替换符" : '输入替换函数的内容'}
+          label={isReplacerStr ? '替换子串' : '替换函数'}
+          placeholder={
+            isReplacerStr ? "输入子串，支持 $$, $&, $`, $', $n 等特殊替换符" : '输入替换函数的内容'
+          }
           multiline
           fullWidth
           value={replacer}
@@ -169,8 +187,8 @@ export const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({ source, 
                   .map((match) => {
                     const result: Record<string, string> = {
                       '$&': match[0],
-                      '$`': text.substring(0, match.index),
-                      "$'": text.substring(match.index + match[0].length),
+                      '$`': _text.substring(0, match.index),
+                      "$'": _text.substring(match.index + match[0].length),
                     }
                     for (let i = 1; i < match.length; ++i) {
                       result['$' + i] = match[i]
@@ -190,12 +208,12 @@ export const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({ source, 
                           <TableRow key={key}>
                             <TableCell>
                               <CodeBlock language="javascript">
-                                {quote + escape(key, quote) + quote}
+                                {quote + escapeQuote(key, quote) + quote}
                               </CodeBlock>
                             </TableCell>
                             <TableCell>
                               <CodeBlock language="javascript">
-                                {quote + escape(patterns[key], quote) + quote}
+                                {quote + escapeQuote(escapeStr(patterns[key]), quote) + quote}
                               </CodeBlock>
                             </TableCell>
                           </TableRow>
@@ -206,7 +224,7 @@ export const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({ source, 
               </TableBody>
             </Table>
           ) : (
-            <Table size='small'>
+            <Table size="small">
               <TableHead>
                 <TableRow>
                   <TableCell>Replacer Parameters</TableCell>
@@ -214,41 +232,45 @@ export const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({ source, 
                 </TableRow>
               </TableHead>
               <TableBody>
-                {matches.map((match) => {
-                  const result: Record<string, string | number> = {}
-                  result['match'] = match[0]
-                  for (let i = 1; i < match.length; ++i) {
-                    result['p' + i] = match[i]
-                  }
-                  result['offset'] = match.index
-                  result['input'] = match.input
-                  return result
-                }).map((record, i) => {
-                  return (
-                    <Fragment key={i}>
-                      <TableRow>
-                        <TableCell>
-                          <strong>Group #{i + 1}</strong>
-                        </TableCell>
-                        <TableCell></TableCell>
-                      </TableRow>
-                      {_.map(record, (value, key) => (
-                        <TableRow key={key}>
+                {matches
+                  .map((match) => {
+                    const result: Record<string, string | number> = {}
+                    result['match'] = match[0]
+                    for (let i = 1; i < match.length; ++i) {
+                      result['p' + i] = match[i]
+                    }
+                    result['offset'] = match.index
+                    result['input'] = match.input
+                    return result
+                  })
+                  .map((record, i) => {
+                    return (
+                      <Fragment key={i}>
+                        <TableRow>
                           <TableCell>
-                            <CodeBlock language="javascript">
-                              {key}
-                            </CodeBlock>
+                            <strong>Group #{i + 1}</strong>
                           </TableCell>
-                          <TableCell>
-                            <CodeBlock language="javascript">
-                              {_.isNumber(value) ? String(value) : (quote + escape(value, quote) + quote)}
-                            </CodeBlock>
-                          </TableCell>
+                          <TableCell></TableCell>
                         </TableRow>
-                      ))}
-                    </Fragment>
-                  )
-                })}
+                        {_.map(record, (value, key) => (
+                          <TableRow key={key}>
+                            <TableCell>
+                              <CodeBlock language="javascript">
+                                {key}
+                              </CodeBlock>
+                            </TableCell>
+                            <TableCell>
+                              <CodeBlock language="javascript">
+                                {_.isNumber(value)
+                                  ? String(value)
+                                  : quote + escapeQuote(escapeStr(value), quote) + quote}
+                              </CodeBlock>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </Fragment>
+                    )
+                  })}
               </TableBody>
             </Table>
           )}
@@ -274,7 +296,7 @@ export const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({ source, 
             <Typography color="error">{String(error1)}</Typography>
           ) : (
             <CodeBlock
-              code={`// --- output ---\n\`${result1?.replace(/`/g, '\\`')}\``}
+              code={`// --- output ---\n${quote}${escapeQuote(escapeStr(result1!), quote)}${quote}`}
               language="javascript"
             />
           )}

@@ -21,6 +21,8 @@ import {
   RadioGroup,
   Radio,
   Paper,
+  FormLabel,
+  Switch,
 } from '@material-ui/core'
 import { makeStyles, useTheme } from '@material-ui/core/styles'
 import { useQuery } from 'hooks'
@@ -75,11 +77,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-type PanelProps = {
-  regexp: RegExpType
-  value: string
-  onChange: (newValue: string) => void
-}
 
 const TabPanel: React.FC<{ id: number; value: number }> = ({ children, id, value, ...props }) => {
   return <Box {...props}>{id === value && <Box pt={3}>{children}</Box>}</Box>
@@ -132,12 +129,18 @@ const RegExpPage: React.FC = () => {
   const [regexp, setRegexp] = useRegExp()
   const [text] = useState('')
   const [newText] = useState('')
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const theme = useTheme()
   const matches = useMediaQuery(theme.breakpoints.down('sm'))
   const [expanded, setExpanded] = useState(false)
   const [language, setLanguage] = useState(Language.JavaScript)
   const [quote, setQuote] = useState<TQuote>('`')
+  /**
+   * 是否转义，默认 false
+   * 为 false 时，输入'\n'，程序取到的是'\n'
+   * 为 true  时，输入'\n'，程序取到的是'\\n'
+   */
+  const [escape, setEscape] = useState(false)
 
   // 单个标志位变化
   const onFlagChange = (flag: 'g' | 'i' | 'm', checked: boolean) => {
@@ -235,23 +238,6 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`
               }
             />
             <CopyAction text={`/${regexp.source}/${regexp.flags}`} />
-
-            <Tooltip title="设置">
-              <IconButton onClick={(e) => setAnchorEl(anchorEl ? null : e.currentTarget)}>
-                <Settings />
-              </IconButton>
-            </Tooltip>
-            <Popper open={!!anchorEl} anchorEl={anchorEl} placement='left-start'>
-              <Paper>
-                <Box p={1}>
-                <RadioGroup value={quote} onChange={(e, value) => setQuote(value as TQuote)}>
-                  <FormControlLabel value='"' control={<Radio />} label='双引号(")' />
-                  <FormControlLabel value="'" control={<Radio />} label="单引号(')" />
-                  <FormControlLabel value="`" control={<Radio />} label="反引号(`)" />
-                </RadioGroup>
-                </Box>
-              </Paper>
-            </Popper>
           </Box>
         </Box>
 
@@ -286,7 +272,7 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`
         <Box mt={2}>
           <Tabs
             value={tabIndex}
-            onChange={(_, value) => setTabIndex(value)}
+            onChange={(_, value) => value !== undefined && setTabIndex(value)}
             textColor="primary"
             indicatorColor="primary"
             variant={matches ? 'fullWidth' : 'standard'}
@@ -295,15 +281,51 @@ str.replace(/${regexp.source}/${regexp.flags}, "${newText}")`
             <Tab label="匹配"></Tab>
             <Tab label="替换"></Tab>
             <Tab label="常用正则"></Tab>
+            <Box>
+              <Tooltip title="设置">
+                <IconButton onClick={(e) => setAnchorEl(anchorEl ? null : e.currentTarget)}>
+                  <Settings />
+                </IconButton>
+              </Tooltip>
+              <Popper open={!!anchorEl} anchorEl={anchorEl} placement="left-start">
+                <Paper>
+                  <Box p={1}>
+                    <RadioGroup value={quote} onChange={(e, value) => setQuote(value as TQuote)}>
+                      <FormControlLabel value='"' control={<Radio />} label='双引号(")' />
+                      <FormControlLabel value="'" control={<Radio />} label="单引号(')" />
+                      <FormControlLabel value="`" control={<Radio />} label="反引号(`)" />
+                    </RadioGroup>
+                  </Box>
+                  <Box p={1}>
+                    <FormLabel>自动转义字符：</FormLabel>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          color="primary"
+                          checked={escape}
+                          onChange={(_, checked) => setEscape(checked)}
+                        />
+                      }
+                      label={escape ? '是' : '否'}
+                    />
+                  </Box>
+                </Paper>
+              </Popper>
+            </Box>
           </Tabs>
           <TabPanel id={TabIndex.TEST} value={tabIndex}>
-            <RegExpTestPanel source={regexp.source} flags={regexp.flags} quote={quote} />
+            <RegExpTestPanel
+              source={regexp.source}
+              flags={regexp.flags}
+              quote={quote}
+              escape={escape}
+            />
           </TabPanel>
           <TabPanel id={TabIndex.MATCH} value={tabIndex}>
-            <RegExpMatchPanel source={regexp.source} flags={regexp.flags} quote={quote}/>
+            <RegExpMatchPanel source={regexp.source} flags={regexp.flags} quote={quote} escape={escape} />
           </TabPanel>
           <TabPanel id={TabIndex.REPLACE} value={tabIndex}>
-            <RegExpReplacePanel source={regexp.source} flags={regexp.flags} quote={quote} />
+            <RegExpReplacePanel source={regexp.source} flags={regexp.flags} quote={quote} escape={escape}/>
           </TabPanel>
           <TabPanel id={TabIndex.COMMONLY_USED_REGEXP} value={tabIndex}>
             <RegExpChips onSelect={(regexp) => setRegexp(regexp)} />

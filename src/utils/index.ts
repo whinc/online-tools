@@ -1,23 +1,35 @@
-import { TQuote } from "pages/RegExpPage/types";
+import { TQuote } from 'pages/RegExpPage/types'
 
 export const debugErr = (...args: any[]) =>
-  process.env.NODE_ENV !== "production" && console.error(...args);
+  process.env.NODE_ENV !== 'production' && console.error(...args)
 export const debugLog = (...args: any[]) =>
-  process.env.NODE_ENV !== "production" && console.log(...args);
+  process.env.NODE_ENV !== 'production' && console.log(...args)
 export const debugWarn = (...args: any[]) =>
-  process.env.NODE_ENV !== "production" && console.warn(...args);
+  process.env.NODE_ENV !== 'production' && console.warn(...args)
+
+export const escapeQuote = (str: string, quote: TQuote) =>str.replace(new RegExp(quote, 'g'), '\\' + quote)
 
 /**
  * 转义字符串
- * @param str 
- * @param quote 
+ * @param str
+ * @param quote
  */
-export const escape = (str: string, quote: TQuote) =>
-  str.replace(new RegExp(quote, 'g'), '\\' + quote).replace(/\n/g, '\\n')
+export const escapeStr = (str: string) => str.replace(/\n|\\/g, (match) => {
+    if (match === '\n') return '\\n'
+    else if (match === '\\') return '\\\\'
+    else return match
+  })
+
+// export const unescapeStr = (str: string) => str.replace('\\n', '\n')
+export const unescapeStr = (str: string) => str.replace(/\\\\|\\n/g, (match) => {
+  if (match === '\\\\') return '\\'
+  else if (match === '\\n') return '\n'
+  else return match
+})
 
 /**
  * 复制到剪切板
- * @param text 
+ * @param text
  */
 export const copyToClipboard = (text: string): boolean => {
   const textArea = document.createElement('textarea')
