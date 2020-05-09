@@ -277,17 +277,27 @@ export const RegExpReplacePanel: React.FC<RegExpReplacePanelProps> = ({
         </Box>
       )}
       <Box overflow="auto">
-        <Box mt={2} display="flex" alignItems="center" flexWrap="wrap" bgcolor="rgb(246, 248, 250)">
-          <Box flexGrow={1}>
-            <CodeBlock code={code1!} language="javascript" />
-          </Box>
-          <Box display="flex">
+        <Box
+          mt={2}
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          flexWrap="wrap"
+          bgcolor="rgb(246, 248, 250)"
+        >
+          <CodeBlock>{`String.prototype.replace()`}</CodeBlock>
             <OutLink
               title="RegExp.prototype.replace() - MDN"
               href={
                 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace'
               }
             />
+        </Box>
+        <Box mt={1} display="flex" alignItems="center" flexWrap="wrap" bgcolor="rgb(246, 248, 250)">
+          <Box flexGrow={1}>
+            <CodeBlock code={code1!} language="javascript" />
+          </Box>
+          <Box display="flex">
             <CopyAction text={code1!} />
           </Box>
         </Box>

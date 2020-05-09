@@ -11,7 +11,12 @@ export type RegExpTestPanelProps = {
   escape: boolean
 }
 
-export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({ source, flags, quote, escape}) => {
+export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({
+  source,
+  flags,
+  quote,
+  escape,
+}) => {
   const [text, setText] = useState('')
   // const [text, setText] = useUnescapedText('')
   const { code1, result1, error1, code2, result2, error2 } = useMemo(() => {
@@ -54,17 +59,27 @@ export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({ source, flags,
         />
       </Box>
       <Box overflow="auto">
-        <Box mt={2} display="flex" alignItems="center" flexWrap="wrap" bgcolor="rgb(246, 248, 250)">
+        <Box
+          mt={2}
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          flexWrap="wrap"
+          bgcolor="rgb(246, 248, 250)"
+        >
+          <CodeBlock>{`RegExp.prototype.test()`}</CodeBlock>
+          <OutLink
+            title="RegExp.prototype.test() - MDN"
+            href={
+              'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test'
+            }
+          />
+        </Box>
+        <Box mt={1} display="flex" alignItems="center" flexWrap="wrap" bgcolor="rgb(246, 248, 250)">
           <Box flexGrow={1}>
             <CodeBlock code={`${code1!}`} language="javascript" />
           </Box>
           <Box display="flex">
-            <OutLink
-              title="RegExp.prototype.test() - MDN"
-              href={
-                'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test'
-              }
-            />
             <CopyAction text={code1!} />
           </Box>
         </Box>
@@ -75,17 +90,28 @@ export const RegExpTestPanel: React.FC<RegExpTestPanelProps> = ({ source, flags,
             <CodeBlock code={'// returns\n' + result1} language="javascript" />
           )}
         </Box>
-        <Box mt={2} display="flex" alignItems="center" flexWrap="wrap" bgcolor="rgb(246, 248, 250)">
+
+        <Box
+          mt={2}
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          flexWrap="wrap"
+          bgcolor="rgb(246, 248, 250)"
+        >
+          <CodeBlock>{`String.prototype.search()`}</CodeBlock>
+          <OutLink
+            title="String.prototype.search() - MDN"
+            href={
+              'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/search'
+            }
+          />
+        </Box>
+        <Box mt={1} display="flex" alignItems="center" flexWrap="wrap" bgcolor="rgb(246, 248, 250)">
           <Box flexGrow={1}>
             <CodeBlock code={`${code2!}`} language="javascript" />
           </Box>
           <Box display="flex">
-            <OutLink
-              title="String.prototype.search() - MDN"
-              href={
-                'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/search'
-              }
-            />
             <CopyAction text={code2!} />
           </Box>
         </Box>

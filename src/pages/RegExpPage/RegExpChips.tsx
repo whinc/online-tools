@@ -34,7 +34,7 @@ const useStyles = makeStyles(theme => ({
 const REG_EXP_ARR = [
   {
     label: "身份证号",
-    source: /^\d{17}[0-9Xx]|\d{15}$/.source,
+    source: /^(\d{17}[0-9Xx]|\d{15})$/.source,
   },
   {
     label: "Email地址",

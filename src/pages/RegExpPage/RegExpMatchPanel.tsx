@@ -71,17 +71,27 @@
         />
       </Box>
       <Box overflow="auto">
-        <Box mt={2} display="flex" alignItems="center" flexWrap="wrap" bgcolor="rgb(246, 248, 250)">
-          <Box flexGrow={1}>
-            <CodeBlock code={`${code1!}`} language="javascript" />
-          </Box>
-          <Box display="flex">
+        <Box
+          mt={2}
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          flexWrap="wrap"
+          bgcolor="rgb(246, 248, 250)"
+        >
+          <CodeBlock>{`RegExp.prototype.exec()`}</CodeBlock>
             <OutLink
               title="RegExp.prototype.exec() - MDN"
               href={
                 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec'
               }
             />
+        </Box>
+        <Box mt={1} display="flex" alignItems="center" flexWrap="wrap" bgcolor="rgb(246, 248, 250)">
+          <Box flexGrow={1}>
+            <CodeBlock code={`${code1!}`} language="javascript" />
+          </Box>
+          <Box display="flex">
             <CopyAction text={code1!} />
           </Box>
         </Box>
@@ -95,17 +105,28 @@
             />
           )}
         </Box>
-        <Box mt={2} display="flex" alignItems="center" flexWrap="wrap" bgcolor="rgb(246, 248, 250)">
-          <Box flexGrow={1}>
-            <CodeBlock code={`${code2!}`} language="javascript" />
-          </Box>
-          <Box display="flex">
+
+        <Box
+          mt={2}
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          flexWrap="wrap"
+          bgcolor="rgb(246, 248, 250)"
+        >
+          <CodeBlock>{`String.prototype.match()`}</CodeBlock>
             <OutLink
               title="String.prototype.match() - MDN"
               href={
                 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match'
               }
             />
+        </Box>
+        <Box mt={1} display="flex" alignItems="center" flexWrap="wrap" bgcolor="rgb(246, 248, 250)">
+          <Box flexGrow={1}>
+            <CodeBlock code={`${code2!}`} language="javascript" />
+          </Box>
+          <Box display="flex">
             <CopyAction text={code2!} />
           </Box>
         </Box>
@@ -121,8 +142,24 @@
         </Box>
         {supportMatchAll && (
           <>
+        <Box
+          mt={2}
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          flexWrap="wrap"
+          bgcolor="rgb(246, 248, 250)"
+        >
+          <CodeBlock>{`String.prototype.matchAll()`}</CodeBlock>
+                <OutLink
+                  title="String.prototype.matchAll() - MDN"
+                  href={
+                    'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/matchAll'
+                  }
+                />
+        </Box>
             <Box
-              mt={2}
+              mt={1}
               display="flex"
               alignItems="center"
               flexWrap="wrap"
@@ -132,12 +169,6 @@
                 <CodeBlock code={`${code3!}`} language="javascript" />
               </Box>
               <Box display="flex">
-                <OutLink
-                  title="String.prototype.matchAll() - MDN"
-                  href={
-                    'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/matchAll'
-                  }
-                />
                 <CopyAction text={code3!} />
               </Box>
             </Box>
